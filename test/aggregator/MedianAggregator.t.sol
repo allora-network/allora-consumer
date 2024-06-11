@@ -101,7 +101,7 @@ contract MedianAggregatorTest is Test {
     function test_medianAggregatorNoValues() public {
         uint256[] memory values = new uint256[](0);
 
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2MedianAggregatorNoValuesToAggregate()"));
+        vm.expectRevert(abi.encodeWithSignature("AlloraConsumerMedianAggregatorNoValuesToAggregate()"));
         medianAggregator.aggregate(values, "");
     }
 

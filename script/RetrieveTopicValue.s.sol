@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import '../lib/forge-std/src/Script.sol';
 
-import { IAlloraAdapter, TopicValue, AlloraAdapterNumericData } from '../src/interface/IAlloraAdapter.sol';
+import { IAlloraConsumer, TopicValue, AlloraConsumerNetworkInferenceData } from '../src/interface/IAlloraConsumer.sol';
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
@@ -15,8 +15,8 @@ import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/str
  */
 contract RetrieveTopicValue is Script {
 
-    // Sepolia adapter Address
-    IAlloraAdapter constant ALLORA_ADAPTER = IAlloraAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
+    // Sepolia consumer Address
+    IAlloraConsumer constant ALLORA_CONSUMER = IAlloraConsumer(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
     uint256 constant TOPIC_ID = 1;
 
     function run() public virtual {
@@ -25,7 +25,7 @@ contract RetrieveTopicValue is Script {
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', vm.addr(scriptRunnerPrivateKey));
 
-        TopicValue memory topicValue = ALLORA_ADAPTER.getTopicValue(TOPIC_ID, '');
+        TopicValue memory topicValue = ALLORA_CONSUMER.getTopicValue(TOPIC_ID, '');
 
         console.log('Recent Value: %d', topicValue.recentValue);
         console.log('Recent Value Timestamp: %d', topicValue.recentValueTime);

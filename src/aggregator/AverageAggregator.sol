@@ -13,7 +13,7 @@ contract AverageAggregator is IAggregator {
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
-    error AlloraAdapterV2AverageAggregatorNoValuesToAggregate();
+    error AlloraConsumerAverageAggregatorNoValuesToAggregate();
 
     // ***************************************************************
     // * ===================== USER INTERFACE ====================== *
@@ -26,7 +26,7 @@ contract AverageAggregator is IAggregator {
     ) external pure returns (uint256 value) {
         uint256 countValues = values.length;
         if (countValues == 0) {
-            revert AlloraAdapterV2AverageAggregatorNoValuesToAggregate();
+            revert AlloraConsumerAverageAggregatorNoValuesToAggregate();
         }
 
         uint256 sum = 0;

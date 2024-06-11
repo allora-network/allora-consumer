@@ -3,19 +3,18 @@ pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
-import { AlloraAdapter, AlloraAdapterConstructorArgs } from "../src/AlloraAdapter.sol";
-import { NumericData } from "../src/interface/IAlloraAdapter.sol";
+import { AlloraConsumer, AlloraConsumerConstructorArgs } from "../src/AlloraConsumer.sol";
 import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
 import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
 import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
 import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
 
-contract AlloraAdapterAdmin is Test {
+contract AlloraConsumerAdmin is Test {
 
     EvenFeeHandler public evenFeeHandler;
     IAggregator aggregator;
-    AlloraAdapter alloraAdapter;
+    AlloraConsumer alloraConsumer;
 
     address admin = address(100);
     address protocolFeeReceiver = address(101);
@@ -42,7 +41,7 @@ contract AlloraAdapterAdmin is Test {
         vm.warp(1 hours);
 
         aggregator = new AverageAggregator();
-        alloraAdapter = new AlloraAdapter(AlloraAdapterConstructorArgs({ owner: admin, aggregator: aggregator }));
+        alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({ owner: admin, aggregator: aggregator }));
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
@@ -62,31 +61,45 @@ contract AlloraAdapterAdmin is Test {
     }
 
     // ***************************************************************
-    // * ============= UPDATE DATA VALIDITY SECONDS ================ *
+    // * ========= UPDATE FUTURE DATA VALIDITY SECONDS ============= *
     // ***************************************************************
 
-    function test_imposterCantUpdateDataValiditySeconds() public {
+    function test_imposterCantUpdateFutureDataValiditySeconds() public {
         vm.startPrank(imposter);
 
         vm.expectRevert("Ownable: caller is not the owner");
-        alloraAdapter.updateDataValiditySeconds(10 minutes);
+        alloraConsumer.updateFutureDataValiditySeconds(3 minutes);
     }
 
-    function test_ownerCantUpdateDataValiditySecondsToZero() public {
+    function test_ownerCanUpdateFutureDataValiditySeconds() public {
         vm.startPrank(admin);
 
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2InvalidDataValiditySeconds()"));
-        alloraAdapter.updateDataValiditySeconds(0);
+        assertFalse(alloraConsumer.futureDataValiditySeconds() == 3 minutes);
+
+        alloraConsumer.updateFutureDataValiditySeconds(3 minutes);
+
+        assertEq(alloraConsumer.futureDataValiditySeconds(), 3 minutes);
     }
 
-    function test_ownerCanUpdateDataValiditySeconds() public {
+    // ***************************************************************
+    // * ========== UPDATE PAST DATA VALIDITY SECONDS ============== *
+    // ***************************************************************
+
+    function test_imposterCantUpdatePastDataValiditySeconds() public {
+        vm.startPrank(imposter);
+
+        vm.expectRevert("Ownable: caller is not the owner");
+        alloraConsumer.updatePastDataValiditySeconds(3 minutes);
+    }
+
+    function test_ownerCanUpdatePastDataValiditySeconds() public {
         vm.startPrank(admin);
 
-        assertEq(alloraAdapter.dataValiditySeconds(), 60 minutes);
+        assertFalse(alloraConsumer.pastDataValiditySeconds() == 3 minutes);
 
-        alloraAdapter.updateDataValiditySeconds(10 minutes);
+        alloraConsumer.updatePastDataValiditySeconds(3 minutes);
 
-        assertEq(alloraAdapter.dataValiditySeconds(), 10 minutes);
+        assertEq(alloraConsumer.pastDataValiditySeconds(), 3 minutes);
     }
 
     // ***************************************************************
@@ -97,17 +110,17 @@ contract AlloraAdapterAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert("Ownable: caller is not the owner");
-        alloraAdapter.addDataProvider(imposter);
+        alloraConsumer.addDataProvider(imposter);
     }
 
     function test_ownerCanAddDataProvider() public {
         vm.startPrank(admin);
 
-        assertEq(alloraAdapter.validDataProvider(newDataProvider), false);
+        assertEq(alloraConsumer.validDataProvider(newDataProvider), false);
 
-        alloraAdapter.addDataProvider(newDataProvider);
+        alloraConsumer.addDataProvider(newDataProvider);
 
-        assertEq(alloraAdapter.validDataProvider(newDataProvider), true);
+        assertEq(alloraConsumer.validDataProvider(newDataProvider), true);
     }
 
     // ***************************************************************
@@ -118,19 +131,19 @@ contract AlloraAdapterAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert("Ownable: caller is not the owner");
-        alloraAdapter.removeDataProvider(imposter);
+        alloraConsumer.removeDataProvider(imposter);
     }
 
     function test_ownerCanRemoveDataProvider() public {
         vm.startPrank(admin);
 
-        alloraAdapter.addDataProvider(newDataProvider);
+        alloraConsumer.addDataProvider(newDataProvider);
 
-        assertEq(alloraAdapter.validDataProvider(newDataProvider), true);
+        assertEq(alloraConsumer.validDataProvider(newDataProvider), true);
 
-        alloraAdapter.removeDataProvider(newDataProvider);
+        alloraConsumer.removeDataProvider(newDataProvider);
 
-        assertEq(alloraAdapter.validDataProvider(newDataProvider), false);
+        assertEq(alloraConsumer.validDataProvider(newDataProvider), false);
     }
 
     // ***************************************************************
@@ -141,14 +154,14 @@ contract AlloraAdapterAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert("Ownable: caller is not the owner");
-        alloraAdapter.updateAggregator(dummyAggregator);
+        alloraConsumer.updateAggregator(dummyAggregator);
     }
 
     function test_ownerCantUpdateAggregatorToZeroAddress() public {
         vm.startPrank(admin);
 
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2InvalidAggregator()"));
-        alloraAdapter.updateAggregator(IAggregator(address(0)));
+        vm.expectRevert(abi.encodeWithSignature("AlloraConsumerInvalidAggregator()"));
+        alloraConsumer.updateAggregator(IAggregator(address(0)));
     }
 
     function test_ownerCanUpdateAggregator() public {
@@ -156,53 +169,53 @@ contract AlloraAdapterAdmin is Test {
 
         MedianAggregator medianAggregator = new MedianAggregator();
 
-        assertEq(address(alloraAdapter.aggregator()), address(aggregator));
+        assertEq(address(alloraConsumer.aggregator()), address(aggregator));
 
-        alloraAdapter.updateAggregator(medianAggregator);
+        alloraConsumer.updateAggregator(medianAggregator);
 
-        assertEq(address(alloraAdapter.aggregator()), address(medianAggregator));
+        assertEq(address(alloraConsumer.aggregator()), address(medianAggregator));
     }
 
     // ***************************************************************
-    // * ================== TURN OFF ADAPTER ======================== *
+    // * ================== TURN OFF CONSUMER ======================== *
     // ***************************************************************
 
-    function test_imposterCantTurnOffAdapter() public {
+    function test_imposterCantTurnOffConsumer() public {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        alloraAdapter.turnOffAdapter();
+        alloraConsumer.turnOffConsumer();
     }
 
-    function test_ownerCanTurnOffAdapter() public {
+    function test_ownerCanTurnOffConsumer() public {
         vm.startPrank(admin);
 
-        assertEq(alloraAdapter.switchedOn(), true);
+        assertEq(alloraConsumer.switchedOn(), true);
 
-        alloraAdapter.turnOffAdapter();
+        alloraConsumer.turnOffConsumer();
 
-        assertEq(alloraAdapter.switchedOn(), false);
+        assertEq(alloraConsumer.switchedOn(), false);
     }
 
     // ***************************************************************
-    // * =================== TURN ON Adapter ======================== *
+    // * ================== TURN ON CONSUMER ======================= *
     // ***************************************************************
 
-    function test_imposterCantTurnOnAdapter() public {
+    function test_imposterCantTurnOnConsumer() public {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        alloraAdapter.turnOnAdapter();
+        alloraConsumer.turnOnConsumer();
     }
 
-    function test_ownerCanTurnOnAdapter() public {
+    function test_ownerCanTurnOnConsumer() public {
         vm.startPrank(admin);
-        alloraAdapter.turnOffAdapter();
+        alloraConsumer.turnOffConsumer();
 
-        assertEq(alloraAdapter.switchedOn(), false);
+        assertEq(alloraConsumer.switchedOn(), false);
 
-        alloraAdapter.turnOnAdapter();
+        alloraConsumer.turnOnConsumer();
 
-        assertEq(alloraAdapter.switchedOn(), true);
+        assertEq(alloraConsumer.switchedOn(), true);
     }
 }

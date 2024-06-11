@@ -5,30 +5,28 @@ pragma solidity ^0.8.13;
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
 import { 
-  AlloraAdapterNumericData, 
-  NumericData, 
-  IAlloraAdapter, 
+  IAlloraConsumer, 
   TopicValue, 
   NetworkInferenceData,
-  AlloraAdapterNetworkInferenceData 
-} from './interface/IAlloraAdapter.sol';
+  AlloraConsumerNetworkInferenceData 
+} from './interface/IAlloraConsumer.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EIP712 } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol";
 
-struct AlloraAdapterConstructorArgs {
+struct AlloraConsumerConstructorArgs {
     address owner;
     IAggregator aggregator;
 }
 
 
-contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
+contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
 
     /// @dev The value for each topic
     mapping(uint256 topicId => mapping(bytes extraData => TopicValue)) public topicValue;
 
-    /// @dev Whether the AlloraAdapter contract is switched on and usable
+    /// @dev Whether the AlloraConsumer contract is switched on and usable
     bool public switchedOn = true;
 
     /// @dev The valid data providers
@@ -42,12 +40,14 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     /// @dev The aggregator to use for aggregating numeric data
     IAggregator public aggregator;
 
-    /// @dev The number of seconds data is valid for  
-    uint48 public dataValiditySeconds = 1 hours;
+    /// @dev The number of seconds data is valid for 
+    uint48 public pastDataValiditySeconds = 1 hours;
+  
+    uint48 public futureDataValiditySeconds = 5 minutes;
 
     /// @dev The constructor
-    constructor(AlloraAdapterConstructorArgs memory args) 
-        EIP712("AlloraAdapter", "1") 
+    constructor(AlloraConsumerConstructorArgs memory args) 
+        EIP712("AlloraConsumer", "1") 
     {
         _transferOwnership(args.owner);
 
@@ -59,30 +59,31 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     // ***************************************************************
 
     // main interface events
-    event AlloraAdapterV2AdapterVerifiedData(uint256 topicId, uint256 numericData, address dataProvider, bytes extraData);
-    event AlloraAdapterV2AdapterVerifiedNetworkInferenceData(uint256 networkInference, uint256 timestamp, uint256 topicId, bytes extraData);
+    event AlloraConsumerVerifiedData(uint256 topicId, uint256 numericData, address dataProvider, bytes extraData);
+    event AlloraConsumerVerifiedNetworkInferenceData(uint256 networkInference, uint256 timestamp, uint256 topicId, bytes extraData);
 
-    // adapter admin updates
-    event AlloraAdapterV2AdapterAdminTurnedOff();
-    event AlloraAdapterV2AdapterAdminTurnedOn();
-    event AlloraAdapterV2AdapterOwnerAddedDataProvider(address dataProvider);
-    event AlloraAdapterV2AdapterOwnerRemovedDataProvider(address dataProvider);
-    event AlloraAdapterV2AdapterOwnerUpdatedDataValiditySeconds(uint48 dataValiditySeconds);
-    event AlloraAdapterV2AdapterOwnerUpdatedAggregator(IAggregator aggregator);
+    // allora consumer admin updates
+    event AlloraConsumerAdminTurnedOff();
+    event AlloraConsumerAdminTurnedOn();
+    event AlloraConsumerOwnerAddedDataProvider(address dataProvider);
+    event AlloraConsumerOwnerRemovedDataProvider(address dataProvider);
+    event AlloraConsumerOwnerUpdatedFutureDataValiditySeconds(uint48 futureDataValiditySeconds);
+    event AlloraConsumerOwnerUpdatedPastDataValiditySeconds(uint48 pastDataValiditySeconds);
+    event AlloraConsumerOwnerUpdatedAggregator(IAggregator aggregator);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
     // verification errors
-    error AlloraAdapterV2NotSwitchedOn();
-    error AlloraAdapterV2NoDataProvided();
-    error AlloraAdapterV2InvalidDataTime();
-    error AlloraAdapterV2InvalidDataProvider();
+    error AlloraConsumerNotSwitchedOn();
+    error AlloraConsumerNoDataProvided();
+    error AlloraConsumerInvalidDataTime();
+    error AlloraConsumerInvalidDataProvider();
 
     // parameter update errors
-    error AlloraAdapterV2InvalidAggregator();
-    error AlloraAdapterV2InvalidDataValiditySeconds();
+    error AlloraConsumerInvalidAggregator();
+    error AlloraConsumerInvalidDataValiditySeconds();
 
     // casting errors
     error SafeCastOverflowedUintDowncast(uint8 bits, uint256 value);
@@ -91,15 +92,20 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     // * ================== USER INTERFACE ========================= *
     // ***************************************************************
 
-    ///@inheritdoc IAlloraAdapter
+    ///@inheritdoc IAlloraConsumer
     function verifyNetworkInference(
-        AlloraAdapterNetworkInferenceData memory nd
+        AlloraConsumerNetworkInferenceData memory nd
     ) external override returns (
         uint256 networkInference
     ) {
         (networkInference, ) = _verifyNetworkInferenceData(nd);
 
-        emit AlloraAdapterV2AdapterVerifiedNetworkInferenceData(
+        topicValue[nd.networkInferenceData.topicId][nd.networkInferenceData.extraData] = TopicValue({
+            recentValue: _toUint192(networkInference),
+            recentValueTime: _toUint64(block.timestamp)
+        });
+
+        emit AlloraConsumerVerifiedNetworkInferenceData(
             networkInference, 
             nd.networkInferenceData.timestamp, 
             nd.networkInferenceData.topicId, 
@@ -107,63 +113,30 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         );
     }
 
-    ///@inheritdoc IAlloraAdapter
+    ///@inheritdoc IAlloraConsumer
     function verifyNetworkInferenceViewOnly(
-        AlloraAdapterNetworkInferenceData memory nd
+        AlloraConsumerNetworkInferenceData memory nd
     ) external view override returns (
         uint256 networkInference
     ) {
         (networkInference, ) = _verifyNetworkInferenceData(nd);
     }
 
-
-    ///@inheritdoc IAlloraAdapter
-    function verifyData(
-        AlloraAdapterNumericData memory nd
-    ) external override returns (
-        uint256 numericValue, 
-        address dataProvider 
-    ) {
-        (numericValue, dataProvider) = _verifyData(nd);
-
-        topicValue[nd.numericData.topicId][nd.numericData.extraData] = TopicValue({
-            recentValue: _toUint192(numericValue),
-            recentValueTime: _toUint64(block.timestamp)
-        });
-
-        emit AlloraAdapterV2AdapterVerifiedData(
-            nd.numericData.topicId, 
-            numericValue, 
-            dataProvider, 
-            nd.numericData.extraData
-        );
-    }
-
-    ///@inheritdoc IAlloraAdapter
-    function verifyDataViewOnly(
-        AlloraAdapterNumericData memory nd
-    ) external view override returns (
-        uint256 numericValue, 
-        address dataProvider
-    ) {
-        (numericValue, dataProvider) = _verifyData(nd);
-    }
-
     function _verifyNetworkInferenceData(
-        AlloraAdapterNetworkInferenceData memory nd
+        AlloraConsumerNetworkInferenceData memory nd
     ) internal view returns (
         uint256 networkInference, 
         address dataProvider
     ) {
         if (!switchedOn) {
-            revert AlloraAdapterV2NotSwitchedOn();
+            revert AlloraConsumerNotSwitchedOn();
         }
 
         if (
-            block.timestamp < nd.networkInferenceData.timestamp ||
-            nd.networkInferenceData.timestamp + dataValiditySeconds < block.timestamp
+            block.timestamp < nd.networkInferenceData.timestamp - pastDataValiditySeconds ||
+            nd.networkInferenceData.timestamp + futureDataValiditySeconds < block.timestamp
         ) {
-            revert AlloraAdapterV2InvalidDataTime();
+            revert AlloraConsumerInvalidDataTime();
         }
 
         dataProvider = ECDSA.recover(
@@ -172,81 +145,29 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         );
 
         if (!_isOwnerOrValidDataProvider(dataProvider)) {
-            revert AlloraAdapterV2InvalidDataProvider();
+            revert AlloraConsumerInvalidDataProvider();
         }
 
         networkInference = nd.networkInferenceData.networkInference;
     }
 
-    /**
-     * @notice Verify the data provided by the data providers
-     * 
-     * @param nd The data to verify
-     */
-    function _verifyData(
-        AlloraAdapterNumericData memory nd
-    ) internal view returns (
-        uint256 numericValue, 
-        address dataProvider
-    ) {
-        if (!switchedOn) {
-            revert AlloraAdapterV2NotSwitchedOn();
-        }
-
-        uint256 dataCount = nd.numericData.numericValues.length;
-
-        if (dataCount == 0) {
-            revert AlloraAdapterV2NoDataProvided();
-        }
-
-        if (
-            block.timestamp < nd.numericData.timestamp ||
-            nd.numericData.timestamp + dataValiditySeconds < block.timestamp
-        ) {
-            revert AlloraAdapterV2InvalidDataTime();
-        }
-
-        dataProvider = ECDSA.recover(
-            ECDSA.toEthSignedMessageHash(getMessage(nd.numericData)), 
-            nd.signature
-        );
-
-        if (!_isOwnerOrValidDataProvider(dataProvider)) {
-            revert AlloraAdapterV2InvalidDataProvider();
-        }
-
-        numericValue = dataCount == 1
-            ? nd.numericData.numericValues[0]
-            : aggregator.aggregate(nd.numericData.numericValues, nd.extraData);
-    }
-
     // ***************************************************************
     // * ===================== VIEW FUNCTIONS ====================== *
     // ***************************************************************
+
     /**
      * @notice The message that must be signed by the provider to provide valid data
-     *   recognized by verifyData
+     *   recognized by verifyNetworkInference
      * 
-     * @param numericData The numerical data to verify
+     * @param networkInference The numerical data to verify
      */
-
-    function getMessage(NumericData memory numericData) public view returns (bytes32) {
+    function getNetworkInferenceMessage(NetworkInferenceData memory networkInference) public view override returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
             NUMERIC_DATA_TYPEHASH,
-            numericData.topicId,
-            numericData.timestamp,
-            numericData.extraData,
-            abi.encode(numericData.numericValues)
-        )));
-    }
-
-    function getNetworkInferenceMessage(NetworkInferenceData memory numericData) public view returns (bytes32) {
-        return _hashTypedDataV4(keccak256(abi.encode(
-            NUMERIC_DATA_TYPEHASH,
-            numericData.networkInference,
-            numericData.timestamp,
-            numericData.topicId,
-            numericData.extraData
+            networkInference.networkInference,
+            networkInference.timestamp,
+            networkInference.topicId,
+            networkInference.extraData
         )));
     }
 
@@ -268,38 +189,55 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     // * ========================= ADMIN =========================== *
     // ***************************************************************
     /**
-     * @notice Admin function to switch off the adapter contract
+     * @notice Admin function to switch off the consumer contract
      */
-    function turnOffAdapter() external onlyOwner {
+    function turnOffConsumer() external onlyOwner {
         switchedOn = false;
 
-        emit AlloraAdapterV2AdapterAdminTurnedOff();
+        emit AlloraConsumerAdminTurnedOff();
     }
 
     /**
-     * @notice Admin function to switch on the adapter contract
+     * @notice Admin function to switch on the consumer contract
      */
-    function turnOnAdapter() external onlyOwner {
+    function turnOnConsumer() external onlyOwner {
         switchedOn = true;
 
-        emit AlloraAdapterV2AdapterAdminTurnedOn();
+        emit AlloraConsumerAdminTurnedOn();
     }
 
     /**
-     * @notice Topic owner function to update the number of seconds data is valid for
+     * @notice Topic owner function to update the number of seconds into the future data is valid for
      * 
-     * @param _dataValiditySeconds The number of seconds data is valid for
+     * @param _futureDataValiditySeconds The number of seconds data is valid for
      */
-    function updateDataValiditySeconds(
-        uint48 _dataValiditySeconds
+    function updateFutureDataValiditySeconds(
+        uint48 _futureDataValiditySeconds
     ) external onlyOwner {
-        if (_dataValiditySeconds == 0) { 
-            revert AlloraAdapterV2InvalidDataValiditySeconds();
+        if (_futureDataValiditySeconds == 0) { 
+            revert AlloraConsumerInvalidDataValiditySeconds();
         }
 
-        dataValiditySeconds = _dataValiditySeconds;
+        futureDataValiditySeconds = _futureDataValiditySeconds;
 
-        emit AlloraAdapterV2AdapterOwnerUpdatedDataValiditySeconds(dataValiditySeconds);
+        emit AlloraConsumerOwnerUpdatedFutureDataValiditySeconds(futureDataValiditySeconds);
+    }
+
+    /**
+     * @notice Topic owner function to update the number of seconds into the past data is valid for
+     * 
+     * @param _pastDataValiditySeconds The number of seconds data is valid for
+     */
+    function updatePastDataValiditySeconds(
+        uint48 _pastDataValiditySeconds
+    ) external onlyOwner {
+        if (_pastDataValiditySeconds == 0) {
+            revert AlloraConsumerInvalidDataValiditySeconds();
+        }
+
+        pastDataValiditySeconds = _pastDataValiditySeconds;
+
+        emit AlloraConsumerOwnerUpdatedPastDataValiditySeconds(pastDataValiditySeconds);
     }
 
     /**
@@ -309,12 +247,12 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
      */
     function updateAggregator(IAggregator _aggregator) external onlyOwner {
         if (address(_aggregator) == address(0)) {
-            revert AlloraAdapterV2InvalidAggregator();
+            revert AlloraConsumerInvalidAggregator();
         }
 
         aggregator = _aggregator;
 
-        emit AlloraAdapterV2AdapterOwnerUpdatedAggregator(aggregator);
+        emit AlloraConsumerOwnerUpdatedAggregator(aggregator);
     }
 
     /**
@@ -325,7 +263,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     function addDataProvider(address dataProvider) external onlyOwner {
         validDataProvider[dataProvider] = true;
 
-        emit AlloraAdapterV2AdapterOwnerAddedDataProvider(dataProvider);
+        emit AlloraConsumerOwnerAddedDataProvider(dataProvider);
     }
 
     /**
@@ -336,7 +274,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     function removeDataProvider(address dataProvider) external onlyOwner {
         validDataProvider[dataProvider] = false;
 
-        emit AlloraAdapterV2AdapterOwnerRemovedDataProvider(dataProvider);
+        emit AlloraConsumerOwnerRemovedDataProvider(dataProvider);
     }
 
     // ***************************************************************

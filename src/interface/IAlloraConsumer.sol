@@ -9,19 +9,6 @@ pragma solidity ^0.8.0;
 // * ========================= STRUCTS ========================= *
 // ***************************************************************
 
-struct NumericData {
-    uint256 topicId;
-    uint256 timestamp;
-    bytes extraData;
-    uint256[] numericValues; 
-}
-
-struct AlloraAdapterNumericData {
-    bytes signature;
-    NumericData numericData;
-    bytes extraData;
-}
-
 struct TopicValue { 
     uint192 recentValue;
     uint64 recentValueTime;
@@ -34,7 +21,7 @@ struct NetworkInferenceData {
     bytes extraData;
 }
 
-struct AlloraAdapterNetworkInferenceData {
+struct AlloraConsumerNetworkInferenceData {
     bytes signature;
     NetworkInferenceData networkInferenceData;
     bytes extraData;
@@ -45,29 +32,9 @@ struct AlloraAdapterNetworkInferenceData {
 // ***************************************************************
 
 /**
- * @title Allora Adapter Interface
+ * @title Allora Consumer Interface
  */
-interface IAlloraAdapter {
-
-    /**
-     * @notice Get a verified piece of numeric data for a given topic
-     * 
-     * @param nd The numeric data to aggregate
-     */
-    function verifyData(AlloraAdapterNumericData memory nd) external returns (
-        uint256 numericValue, 
-        address dataProvider 
-    );
-
-    /**
-     * @notice Get a verified piece of numeric data for a given topic without mutating state
-     * 
-     * @param pd The numeric data to aggregate
-     */
-    function verifyDataViewOnly(AlloraAdapterNumericData calldata pd) external view returns (
-        uint256 numericValue, 
-        address dataProvider 
-    );
+interface IAlloraConsumer {
 
     /**
      * @notice Get a verified network inference for a given topic
@@ -75,7 +42,7 @@ interface IAlloraAdapter {
      * @param nd The network inference data to verify
      */
     function verifyNetworkInference(
-        AlloraAdapterNetworkInferenceData memory nd
+        AlloraConsumerNetworkInferenceData memory nd
     ) external returns (
         uint256 networkInference
     );
@@ -86,10 +53,18 @@ interface IAlloraAdapter {
      * @param nd The network inference data to verify
      */
     function verifyNetworkInferenceViewOnly(
-        AlloraAdapterNetworkInferenceData calldata nd
+        AlloraConsumerNetworkInferenceData calldata nd
     ) external view returns (
         uint256 networkInference
     );
+
+    /**
+     * @notice The message that must be signed by the provider to provide valid data
+     *   recognized by verifyData
+     * 
+     * @param networkInference The numerical data to verify
+     */
+    function getNetworkInferenceMessage(NetworkInferenceData memory networkInference) external view returns (bytes32);
 
     /**
      * @notice Get the topic data for a given topicId

@@ -3,18 +3,18 @@ pragma solidity 0.8.21;
 
 import '../lib/forge-std/src/Script.sol';
 
-import { AlloraAdapter } from '../src/AlloraAdapter.sol';
+import { AlloraConsumer } from '../src/AlloraConsumer.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
-import { NumericData, AlloraAdapterNumericData } from '../src/interface/IAlloraAdapter.sol';
+import { NetworkInferenceData, AlloraConsumerNetworkInferenceData } from '../src/interface/IAlloraConsumer.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 // run with 
-// forge script ./script/VerifyDataExample.s.sol:VerifyDataExample --rpc-url <rpc url> --etherscan-api-key <etherscan api key> --broadcast --verify -vvvv
+// forge script ./script/VerifyNetworkInferenceDataExample.s.sol:VerifyNetworkInferenceDataExample --rpc-url <rpc url> --etherscan-api-key <etherscan api key> --broadcast --verify -vvvv
 
-contract VerifyDataExample is Script {
+contract VerifyNetworkInferenceDataExample is Script {
 
-    AlloraAdapter alloraAdapter = AlloraAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
+    AlloraConsumer alloraConsumer = AlloraConsumer(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
 
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
@@ -26,23 +26,23 @@ contract VerifyDataExample is Script {
         uint256[] memory numericValues = new uint256[](1);
         numericValues[0] = 123456789012345678;
 
-        NumericData memory numericData = NumericData({
+        NetworkInferenceData memory networkInferenceData = NetworkInferenceData({
+            networkInference: 123456789012345678,
             topicId: 1,
             timestamp: block.timestamp - 5 minutes,
-            numericValues: numericValues,
             extraData: ''
         });
 
-        bytes32 message = alloraAdapter.getMessage(numericData);
+        bytes32 message = alloraConsumer.getNetworkInferenceMessage(networkInferenceData);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             scriptRunnerPrivateKey, 
             ECDSA.toEthSignedMessageHash(message)
         );
 
-        alloraAdapter.verifyData(AlloraAdapterNumericData({
+        alloraConsumer.verifyNetworkInference(AlloraConsumerNetworkInferenceData({
             signature: abi.encodePacked(r, s, v),
-            numericData: numericData,
+            networkInferenceData: networkInferenceData,
             extraData: ''
         }));
 
