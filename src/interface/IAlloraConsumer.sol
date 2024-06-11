@@ -102,7 +102,9 @@ interface IAlloraConsumer {
      * 
      * @param networkInference The numerical data to verify
      */
-    function getNetworkInferenceMessage(NetworkInferenceData memory networkInference) external view returns (bytes32);
+    function getNetworkInferenceMessage(
+        NetworkInferenceData memory networkInference
+    ) external view returns (bytes32);
 
     /**
      * @notice The message that must be signed by the provider to provide valid data
@@ -115,11 +117,20 @@ interface IAlloraConsumer {
     ) external view returns (bytes32);
 
     /**
-     * @notice Get the topic data for a given topicId
+     * @notice Get the inference for a given topicId
      * 
-     * @param topicId The topicId to get the topic data for
-     * @param extraData The extraData to get the topic data for
+     * @param topicId The topicId to get the inference for
+     * @param extraData The extraData to get the inference for
      * @return topicValue The topic data
      */
     function getTopicValue(uint256 topicId, bytes calldata extraData) external view returns (TopicValue memory);
+
+    /**
+     * @notice Get the inference and confidence interval for a given topicId
+     * 
+     * @param topicId The topicId to get the inference and confidence interval for
+     * @param extraData The extraData to get the inference and confidence interval for
+     * @return topicValue The topic data
+     */
+    function getTopicValueAndInterval(uint256 topicId, bytes calldata extraData) external view returns (TopicValueAndInterval memory);
 }

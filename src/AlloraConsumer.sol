@@ -169,7 +169,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         networkInference = nd.networkInferenceData.networkInference;
     }
 
-
+    ///@inheritdoc IAlloraConsumer
     function verifyNetworkInferenceAndConfidenceInterval(
         AlloraConsumerNetworkInferenceAndConfidenceIntervalData memory nd
     ) external override returns (
@@ -254,12 +254,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     // * ===================== VIEW FUNCTIONS ====================== *
     // ***************************************************************
 
-    /**
-     * @notice The message that must be signed by the provider to provide valid data
-     *   recognized by verifyNetworkInference
-     * 
-     * @param networkInference The numerical data to verify
-     */
+    ///@inheritdoc IAlloraConsumer
     function getNetworkInferenceMessage(NetworkInferenceData memory networkInference) public view override returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
             NUMERIC_DATA_TYPEHASH,
@@ -270,12 +265,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         )));
     }
 
-    /**
-     * @notice The message that must be signed by the provider to provide valid data
-     *   recognized by verifyNetworkInference
-     * 
-     * @param networkInferenceAndConfidenceIntervalData The numerical data to verify
-     */
+    ///@inheritdoc IAlloraConsumer
     function getNetworkInferenceAndConfidenceIntervalMessage(
         NetworkInferenceAndConfidenceIntervalData memory networkInferenceAndConfidenceIntervalData
     ) public view override returns (bytes32) {
@@ -290,18 +280,20 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         )));
     }
 
-    /**
-     * @notice Get the topic data for a given topicId
-     * 
-     * @param topicId The topicId to get the topic data for
-     * @param extraData The extraData to get the topic data for
-     * @return topicValue The topic data
-     */
+    ///@inheritdoc IAlloraConsumer
     function getTopicValue(
         uint256 topicId, 
         bytes calldata extraData
     ) external view override returns (TopicValue memory) {
         return topicValue[topicId][extraData];
+    }
+
+    ///@inheritdoc IAlloraConsumer
+    function getTopicValueAndInterval(
+        uint256 topicId, 
+        bytes calldata extraData
+    ) external view override returns (TopicValueAndInterval memory) {
+        return topicValueAndInterval[topicId][extraData];
     }
 
     // ***************************************************************
