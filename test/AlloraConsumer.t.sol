@@ -112,34 +112,48 @@ contract AlloraConsumerTest is Test {
         assertEq(recentValueTime1, timestamp);
     }
 
-
     function test_canCallVerifyDataWithFutureTime() public {
         vm.startPrank(admin);
         alloraConsumer.addDataProvider(signer0);
+        alloraConsumer.updateFutureDataValiditySeconds(30 minutes);
         vm.stopPrank();
 
         NetworkInferenceData memory nd = _dummyNetworkInferenceData();
-        nd.timestamp = uint64(block.timestamp + 1 minutes);
+        nd.timestamp = uint64((block.timestamp + 30 minutes) - 1);
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
         alloraConsumer.verifyNetworkInference(alloraNd);
     }
 
-    function test_canCallVerifyDataWithTimeTooFarIntoTheFuture() public {
+    function test_canCallVerifyDataWithPastTime() public {
         vm.startPrank(admin);
         alloraConsumer.addDataProvider(signer0);
+        alloraConsumer.updatePastDataValiditySeconds(30 minutes);
         vm.stopPrank();
 
         NetworkInferenceData memory nd = _dummyNetworkInferenceData();
-        nd.timestamp = uint64(block.timestamp + 20 minutes);
+        nd.timestamp = uint64((block.timestamp - 30 minutes) + 1);
+
+        AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
+
+        alloraConsumer.verifyNetworkInference(alloraNd);
+    }
+
+    function test_cantCallVerifyDataWithTimeTooFarIntoTheFuture() public {
+        vm.startPrank(admin);
+        alloraConsumer.addDataProvider(signer0);
+        alloraConsumer.updateFutureDataValiditySeconds(30 minutes);
+        vm.stopPrank();
+
+        NetworkInferenceData memory nd = _dummyNetworkInferenceData();
+        nd.timestamp = uint64(block.timestamp + 30 minutes + 1);
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
         vm.expectRevert(abi.encodeWithSignature("AlloraConsumerInvalidDataTime()"));
         alloraConsumer.verifyNetworkInference(alloraNd);
     }
-
 
     function test_cantCallVerifyDataWithExpiredTime() public {
         vm.startPrank(admin);
@@ -171,8 +185,8 @@ contract AlloraConsumerTest is Test {
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
-        uint256 numericValue = alloraConsumer.verifyNetworkInference(alloraNd);
-        uint256 numericValueView = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
+        (uint256 numericValue,) = alloraConsumer.verifyNetworkInference(alloraNd);
+        (uint256 numericValueView,) = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
         assertEq(numericValue, nd.networkInference);
         assertEq(numericValue, numericValueView);
     }
