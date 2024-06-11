@@ -38,7 +38,7 @@ contract AlloraConsumerTest is Test {
 
 
     function setUp() public {
-        vm.warp(1 hours);
+        vm.warp(2 hours);
 
         aggregator = new AverageAggregator();
         alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({
@@ -113,13 +113,26 @@ contract AlloraConsumerTest is Test {
     }
 
 
-    function test_cantCallVerifyDataWithFutureTime() public {
+    function test_canCallVerifyDataWithFutureTime() public {
         vm.startPrank(admin);
         alloraConsumer.addDataProvider(signer0);
         vm.stopPrank();
 
         NetworkInferenceData memory nd = _dummyNetworkInferenceData();
         nd.timestamp = uint64(block.timestamp + 1 minutes);
+
+        AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
+
+        alloraConsumer.verifyNetworkInference(alloraNd);
+    }
+
+    function test_canCallVerifyDataWithTimeTooFarIntoTheFuture() public {
+        vm.startPrank(admin);
+        alloraConsumer.addDataProvider(signer0);
+        vm.stopPrank();
+
+        NetworkInferenceData memory nd = _dummyNetworkInferenceData();
+        nd.timestamp = uint64(block.timestamp + 20 minutes);
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
@@ -160,7 +173,7 @@ contract AlloraConsumerTest is Test {
 
         uint256 numericValue = alloraConsumer.verifyNetworkInference(alloraNd);
         uint256 numericValueView = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
-        assertEq(numericValue, 2 ether);
+        assertEq(numericValue, nd.networkInference);
         assertEq(numericValue, numericValueView);
     }
 
@@ -181,7 +194,7 @@ contract AlloraConsumerTest is Test {
         uint256 recentValue1 = alloraConsumer.getTopicValue(1, '').recentValue;
 
         assertEq(recentValue0, 0);
-        assertEq(recentValue1, 2 ether);
+        assertEq(recentValue1, nd.networkInference);
     }
 
     function test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet() public {
@@ -206,17 +219,18 @@ contract AlloraConsumerTest is Test {
         assertEq(recentValueEmptyExtraData0, 0);
         assertEq(recentValueEmptyExtraData1, 0);
         assertEq(recentValue0, 0);
-        assertEq(recentValue1, 2 ether);
+        assertEq(recentValue1, nd.networkInference);
     }
 
     // ***************************************************************
     // * ================= INTERNAL HELPERS ======================== *
     // ***************************************************************
-    function _dummyNetworkInferenceData() internal pure returns (NetworkInferenceData memory) {
+    function _dummyNetworkInferenceData() internal view returns (NetworkInferenceData memory) {
+
         return NetworkInferenceData({
             networkInference: 123456789012345678,
             topicId: 1,
-            timestamp: 1,
+            timestamp: block.timestamp,
             extraData: ''
         });
     }

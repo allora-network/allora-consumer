@@ -40,9 +40,10 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     /// @dev The aggregator to use for aggregating numeric data
     IAggregator public aggregator;
 
-    /// @dev The number of seconds data is valid for 
+    /// @dev The number of seconds a timestamp can be in the past and still be valid
     uint48 public pastDataValiditySeconds = 1 hours;
-  
+
+    /// @dev The number of seconds a timestamp can be in the future and still be valid
     uint48 public futureDataValiditySeconds = 5 minutes;
 
     /// @dev The constructor
@@ -67,8 +68,8 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     event AlloraConsumerAdminTurnedOn();
     event AlloraConsumerOwnerAddedDataProvider(address dataProvider);
     event AlloraConsumerOwnerRemovedDataProvider(address dataProvider);
-    event AlloraConsumerOwnerUpdatedFutureDataValiditySeconds(uint48 futureDataValiditySeconds);
     event AlloraConsumerOwnerUpdatedPastDataValiditySeconds(uint48 pastDataValiditySeconds);
+    event AlloraConsumerOwnerUpdatedFutureDataValiditySeconds(uint48 futureDataValiditySeconds);
     event AlloraConsumerOwnerUpdatedAggregator(IAggregator aggregator);
 
     // ***************************************************************
@@ -133,8 +134,8 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         }
 
         if (
-            block.timestamp < nd.networkInferenceData.timestamp - pastDataValiditySeconds ||
-            nd.networkInferenceData.timestamp + futureDataValiditySeconds < block.timestamp
+            nd.networkInferenceData.timestamp + pastDataValiditySeconds < block.timestamp ||
+            block.timestamp + futureDataValiditySeconds <  nd.networkInferenceData.timestamp
         ) {
             revert AlloraConsumerInvalidDataTime();
         }
