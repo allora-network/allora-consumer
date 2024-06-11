@@ -27,6 +27,19 @@ struct TopicValue {
     uint64 recentValueTime;
 }
 
+struct NetworkInferenceData {
+    uint256 networkInference;
+    uint256 timestamp;
+    uint256 topicId;
+    bytes extraData;
+}
+
+struct AlloraAdapterNetworkInferenceData {
+    bytes signature;
+    NetworkInferenceData networkInferenceData;
+    bytes extraData;
+}
+
 // ***************************************************************
 // * ======================= INTERFACE ========================= *
 // ***************************************************************
@@ -54,6 +67,28 @@ interface IAlloraAdapter {
     function verifyDataViewOnly(AlloraAdapterNumericData calldata pd) external view returns (
         uint256 numericValue, 
         address dataProvider 
+    );
+
+    /**
+     * @notice Get a verified network inference for a given topic
+     * 
+     * @param nd The network inference data to verify
+     */
+    function verifyNetworkInference(
+        AlloraAdapterNetworkInferenceData memory nd
+    ) external returns (
+        uint256 networkInference
+    );
+  
+    /**
+     * @notice Get a verified network inference for a given topic without mutating state
+     * 
+     * @param nd The network inference data to verify
+     */
+    function verifyNetworkInferenceViewOnly(
+        AlloraAdapterNetworkInferenceData calldata nd
+    ) external view returns (
+        uint256 networkInference
     );
 
     /**

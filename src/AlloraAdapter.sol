@@ -4,7 +4,14 @@ pragma solidity ^0.8.13;
 
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
-import { AlloraAdapterNumericData, NumericData, IAlloraAdapter, TopicValue } from './interface/IAlloraAdapter.sol';
+import { 
+  AlloraAdapterNumericData, 
+  NumericData, 
+  IAlloraAdapter, 
+  TopicValue, 
+  NetworkInferenceData,
+  AlloraAdapterNetworkInferenceData 
+} from './interface/IAlloraAdapter.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
@@ -53,6 +60,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
 
     // main interface events
     event AlloraAdapterV2AdapterVerifiedData(uint256 topicId, uint256 numericData, address dataProvider, bytes extraData);
+    event AlloraAdapterV2AdapterVerifiedNetworkInferenceData(uint256 networkInference, uint256 timestamp, uint256 topicId, bytes extraData);
 
     // adapter admin updates
     event AlloraAdapterV2AdapterAdminTurnedOff();
@@ -82,6 +90,33 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
     // ***************************************************************
+
+    ///@inheritdoc IAlloraAdapter
+    function verifyNetworkInference(
+        AlloraAdapterNetworkInferenceData memory nd
+    ) external override returns (
+        uint256 networkInference
+    ) {
+        (networkInference, ) = _verifyNetworkInferenceData(nd);
+
+        emit AlloraAdapterV2AdapterVerifiedNetworkInferenceData(
+            networkInference, 
+            nd.networkInferenceData.timestamp, 
+            nd.networkInferenceData.topicId, 
+            nd.networkInferenceData.extraData
+        );
+    }
+
+    ///@inheritdoc IAlloraAdapter
+    function verifyNetworkInferenceViewOnly(
+        AlloraAdapterNetworkInferenceData memory nd
+    ) external view override returns (
+        uint256 networkInference
+    ) {
+        (networkInference, ) = _verifyNetworkInferenceData(nd);
+    }
+
+
     ///@inheritdoc IAlloraAdapter
     function verifyData(
         AlloraAdapterNumericData memory nd
@@ -112,6 +147,35 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         address dataProvider
     ) {
         (numericValue, dataProvider) = _verifyData(nd);
+    }
+
+    function _verifyNetworkInferenceData(
+        AlloraAdapterNetworkInferenceData memory nd
+    ) internal view returns (
+        uint256 networkInference, 
+        address dataProvider
+    ) {
+        if (!switchedOn) {
+            revert AlloraAdapterV2NotSwitchedOn();
+        }
+
+        if (
+            block.timestamp < nd.networkInferenceData.timestamp ||
+            nd.networkInferenceData.timestamp + dataValiditySeconds < block.timestamp
+        ) {
+            revert AlloraAdapterV2InvalidDataTime();
+        }
+
+        dataProvider = ECDSA.recover(
+            ECDSA.toEthSignedMessageHash(getNetworkInferenceMessage(nd.networkInferenceData)), 
+            nd.signature
+        );
+
+        if (!_isOwnerOrValidDataProvider(dataProvider)) {
+            revert AlloraAdapterV2InvalidDataProvider();
+        }
+
+        networkInference = nd.networkInferenceData.networkInference;
     }
 
     /**
@@ -173,6 +237,16 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
             numericData.timestamp,
             numericData.extraData,
             abi.encode(numericData.numericValues)
+        )));
+    }
+
+    function getNetworkInferenceMessage(NetworkInferenceData memory numericData) public view returns (bytes32) {
+        return _hashTypedDataV4(keccak256(abi.encode(
+            NUMERIC_DATA_TYPEHASH,
+            numericData.networkInference,
+            numericData.timestamp,
+            numericData.topicId,
+            numericData.extraData
         )));
     }
 
