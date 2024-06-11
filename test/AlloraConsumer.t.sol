@@ -169,6 +169,7 @@ contract AlloraConsumerTest is Test {
         alloraConsumer.verifyNetworkInference(alloraNd);
     }
 
+
     function test_cantCallVerifyDataWithInvalidDataProvider() public {
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(_dummyNetworkInferenceData(), signer0pk);  
         vm.expectRevert(abi.encodeWithSignature("AlloraConsumerInvalidDataProvider()"));
