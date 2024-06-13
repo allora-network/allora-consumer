@@ -138,9 +138,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"allora-adapter@workspace:.":
+"allora-consumer@workspace:.":
   version: 0.0.0-use.local
-  resolution: "allora-adapter@workspace:."
+  resolution: "allora-consumer@workspace:."
   dependencies:
     "@typechain/ethers-v6": ^0.5.0
     axios: ^1.6.0

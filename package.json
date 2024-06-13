@@ -1,7 +1,7 @@
 {
-  "name": "allora-adapter",
+  "name": "allora-consumer",
   "version": "0.0.1",
-  "description": "Allora Adapter",
+  "description": "Allora Consumer",
   "main": "index.js",
   "repository": "https://github.com/upshot-tech/allora-adapter.git",
   "author": "br4e <milesminton@gmail.com>",

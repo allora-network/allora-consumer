@@ -46,9 +46,9 @@ export interface EvenFeeHandlerInterface extends Interface {
 
   getEvent(
     nameOrSignatureOrTopic:
-      | "AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
-      | "AlloraAdapterV2EvenFeeHandlerFeesClaimed"
-      | "AlloraAdapterV2EvenFeeHandlerFeesHandled"
+      | "AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
+      | "AlloraConsumerEvenFeeHandlerFeesClaimed"
+      | "AlloraConsumerEvenFeeHandlerFeesHandled"
       | "OwnershipTransferStarted"
       | "OwnershipTransferred"
   ): EventFragment;
@@ -121,7 +121,7 @@ export interface EvenFeeHandlerInterface extends Interface {
   ): Result;
 }
 
-export namespace AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent {
+export namespace AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent {
   export type InputTuple = [feedOwnerPortion: BigNumberish];
   export type OutputTuple = [feedOwnerPortion: bigint];
   export interface OutputObject {
@@ -133,7 +133,7 @@ export namespace AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEve
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent {
+export namespace AlloraConsumerEvenFeeHandlerFeesClaimedEvent {
   export type InputTuple = [claimer: AddressLike, fees: BigNumberish];
   export type OutputTuple = [claimer: string, fees: bigint];
   export interface OutputObject {
@@ -146,7 +146,7 @@ export namespace AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace AlloraAdapterV2EvenFeeHandlerFeesHandledEvent {
+export namespace AlloraConsumerEvenFeeHandlerFeesHandledEvent {
   export type InputTuple = [fee: BigNumberish, feeReceivers: AddressLike[]];
   export type OutputTuple = [fee: bigint, feeReceivers: string[]];
   export interface OutputObject {
@@ -308,25 +308,25 @@ export interface EvenFeeHandler extends BaseContract {
   >;
 
   getEvent(
-    key: "AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
+    key: "AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
   ): TypedContractEvent<
-    AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
-    AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
-    AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
+    AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
+    AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
+    AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
   >;
   getEvent(
-    key: "AlloraAdapterV2EvenFeeHandlerFeesClaimed"
+    key: "AlloraConsumerEvenFeeHandlerFeesClaimed"
   ): TypedContractEvent<
-    AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
-    AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
-    AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
+    AlloraConsumerEvenFeeHandlerFeesClaimedEvent.InputTuple,
+    AlloraConsumerEvenFeeHandlerFeesClaimedEvent.OutputTuple,
+    AlloraConsumerEvenFeeHandlerFeesClaimedEvent.OutputObject
   >;
   getEvent(
-    key: "AlloraAdapterV2EvenFeeHandlerFeesHandled"
+    key: "AlloraConsumerEvenFeeHandlerFeesHandled"
   ): TypedContractEvent<
-    AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
-    AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
-    AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
+    AlloraConsumerEvenFeeHandlerFeesHandledEvent.InputTuple,
+    AlloraConsumerEvenFeeHandlerFeesHandledEvent.OutputTuple,
+    AlloraConsumerEvenFeeHandlerFeesHandledEvent.OutputObject
   >;
   getEvent(
     key: "OwnershipTransferStarted"
@@ -344,37 +344,37 @@ export interface EvenFeeHandler extends BaseContract {
   >;
 
   filters: {
-    "AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256)": TypedContractEvent<
-      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
-      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
-      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
+    "AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256)": TypedContractEvent<
+      AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
+      AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
+      AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
     >;
-    AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion: TypedContractEvent<
-      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
-      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
-      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
-    >;
-
-    "AlloraAdapterV2EvenFeeHandlerFeesClaimed(address,uint256)": TypedContractEvent<
-      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
-      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
-      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
-    >;
-    AlloraAdapterV2EvenFeeHandlerFeesClaimed: TypedContractEvent<
-      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
-      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
-      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
+    AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortion: TypedContractEvent<
+      AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
+      AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
+      AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
     >;
 
-    "AlloraAdapterV2EvenFeeHandlerFeesHandled(uint256,address[])": TypedContractEvent<
-      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
-      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
-      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
+    "AlloraConsumerEvenFeeHandlerFeesClaimed(address,uint256)": TypedContractEvent<
+      AlloraConsumerEvenFeeHandlerFeesClaimedEvent.InputTuple,
+      AlloraConsumerEvenFeeHandlerFeesClaimedEvent.OutputTuple,
+      AlloraConsumerEvenFeeHandlerFeesClaimedEvent.OutputObject
     >;
-    AlloraAdapterV2EvenFeeHandlerFeesHandled: TypedContractEvent<
-      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
-      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
-      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
+    AlloraConsumerEvenFeeHandlerFeesClaimed: TypedContractEvent<
+      AlloraConsumerEvenFeeHandlerFeesClaimedEvent.InputTuple,
+      AlloraConsumerEvenFeeHandlerFeesClaimedEvent.OutputTuple,
+      AlloraConsumerEvenFeeHandlerFeesClaimedEvent.OutputObject
+    >;
+
+    "AlloraConsumerEvenFeeHandlerFeesHandled(uint256,address[])": TypedContractEvent<
+      AlloraConsumerEvenFeeHandlerFeesHandledEvent.InputTuple,
+      AlloraConsumerEvenFeeHandlerFeesHandledEvent.OutputTuple,
+      AlloraConsumerEvenFeeHandlerFeesHandledEvent.OutputObject
+    >;
+    AlloraConsumerEvenFeeHandlerFeesHandled: TypedContractEvent<
+      AlloraConsumerEvenFeeHandlerFeesHandledEvent.InputTuple,
+      AlloraConsumerEvenFeeHandlerFeesHandledEvent.OutputTuple,
+      AlloraConsumerEvenFeeHandlerFeesHandledEvent.OutputObject
     >;
 
     "OwnershipTransferStarted(address,address)": TypedContractEvent<

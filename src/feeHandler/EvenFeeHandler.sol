@@ -21,17 +21,17 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     // * ========================= EVENTS ========================== *
     // ***************************************************************
 
-    event AlloraAdapterV2EvenFeeHandlerFeesHandled(uint256 fee, address[] feeReceivers);
-    event AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256 feedOwnerPortion);
-    event AlloraAdapterV2EvenFeeHandlerFeesClaimed(address claimer, uint256 fees);
+    event AlloraConsumerEvenFeeHandlerFeesHandled(uint256 fee, address[] feeReceivers);
+    event AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256 feedOwnerPortion);
+    event AlloraConsumerEvenFeeHandlerFeesClaimed(address claimer, uint256 fees);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
-    error AlloraAdapterV2EvenFeeHandlerEthTransferFailed();
-    error AlloraAdapterV2EvenFeeHandlerFeeTooLow();
-    error AlloraAdapterV2EvenFeeHandlerInvalidFeedOwnerFeePortion();
+    error AlloraConsumerEvenFeeHandlerEthTransferFailed();
+    error AlloraConsumerEvenFeeHandlerFeeTooLow();
+    error AlloraConsumerEvenFeeHandlerInvalidFeedOwnerFeePortion();
 
     constructor(
         EvenFeeHandlerConstructorArgs memory args
@@ -52,7 +52,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
         }
 
         if (fee < 1_000) {
-            revert AlloraAdapterV2EvenFeeHandlerFeeTooLow();
+            revert AlloraConsumerEvenFeeHandlerFeeTooLow();
         }
 
         // load once to save gas
@@ -71,7 +71,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
             }
         }
 
-        emit AlloraAdapterV2EvenFeeHandlerFeesHandled(fee, feeReceivers);
+        emit AlloraConsumerEvenFeeHandlerFeesHandled(fee, feeReceivers);
     }
 
     /**
@@ -83,7 +83,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
 
         _safeTransferETH(msg.sender, feesOwed);
 
-        emit AlloraAdapterV2EvenFeeHandlerFeesClaimed(msg.sender, feesOwed);
+        emit AlloraConsumerEvenFeeHandlerFeesClaimed(msg.sender, feesOwed);
     }
 
     
@@ -99,7 +99,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     function _safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
         if (!success) {
-            revert AlloraAdapterV2EvenFeeHandlerEthTransferFailed();
+            revert AlloraConsumerEvenFeeHandlerEthTransferFailed();
         }
     }
 
@@ -114,11 +114,11 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
      */
     function updateFeedOwnerPortion(uint256 feedOwnerPortion_) external onlyOwner {
         if (feedOwnerPortion_ > 1 ether) {
-            revert AlloraAdapterV2EvenFeeHandlerInvalidFeedOwnerFeePortion();
+            revert AlloraConsumerEvenFeeHandlerInvalidFeedOwnerFeePortion();
         }
 
         feedOwnerPortion = feedOwnerPortion_;
 
-        emit AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(feedOwnerPortion_);
+        emit AlloraConsumerEvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(feedOwnerPortion_);
     }
 }
