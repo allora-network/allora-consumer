@@ -6,7 +6,8 @@ import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptograph
 import { AlloraConsumer, AlloraConsumerConstructorArgs } from "../src/AlloraConsumer.sol";
 import { 
     NetworkInferenceData, 
-    AlloraConsumerNetworkInferenceData
+    AlloraConsumerNetworkInferenceData,
+    ConfidenceIntervalValue
 } from "../src/interface/IAlloraConsumer.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
 import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
@@ -178,8 +179,8 @@ contract AlloraConsumerTest is Test {
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
-        (uint256 numericValue,,,) = alloraConsumer.verifyNetworkInference(alloraNd);
-        (uint256 numericValueView,,,) = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
+        (uint256 numericValue,,) = alloraConsumer.verifyNetworkInference(alloraNd);
+        (uint256 numericValueView,,) = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
         assertEq(numericValue, nd.networkInference);
         assertEq(numericValue, numericValueView);
     }
@@ -236,12 +237,20 @@ contract AlloraConsumerTest is Test {
     function _dummyNetworkInferenceData() internal view returns (
         NetworkInferenceData memory
     ) {
+        ConfidenceIntervalValue[] memory confidenceIntervals = new ConfidenceIntervalValue[](2);
+        confidenceIntervals[0] = ConfidenceIntervalValue({
+            confidenceInterval: 10000000000000000,
+            value: 123456789012345678
+        });
+        confidenceIntervals[1] = ConfidenceIntervalValue({
+            confidenceInterval: 1000000000000000000,
+            value: 1234567890123456789
+        });
 
         return NetworkInferenceData({
             networkInference: 123456789012345678,
             topicId: 1,
-            confidenceIntervalLowerBound: 123456789012345678,
-            confidenceIntervalUpperBound: 1000000000000000000,
+            confidenceIntervals: confidenceIntervals,
             timestamp: block.timestamp,
             extraData: ''
         });

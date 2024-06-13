@@ -6,7 +6,11 @@ import '../lib/forge-std/src/Script.sol';
 import { AlloraConsumer } from '../src/AlloraConsumer.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
-import { NetworkInferenceData, AlloraConsumerNetworkInferenceData } from '../src/interface/IAlloraConsumer.sol';
+import { 
+  NetworkInferenceData, 
+  AlloraConsumerNetworkInferenceData,
+  ConfidenceIntervalValue
+} from '../src/interface/IAlloraConsumer.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 // run with 
@@ -26,10 +30,20 @@ contract VerifyNetworkInferenceDataExample is Script {
         uint256[] memory numericValues = new uint256[](1);
         numericValues[0] = 123456789012345678;
 
+
+        ConfidenceIntervalValue[] memory confidenceIntervals = new ConfidenceIntervalValue[](2);
+        confidenceIntervals[0] = ConfidenceIntervalValue({
+            confidenceInterval: 10000000000000000,
+            value: 123456789012345678
+        });
+        confidenceIntervals[1] = ConfidenceIntervalValue({
+            confidenceInterval: 1000000000000000000,
+            value: 1234567890123456789
+        });
+
         NetworkInferenceData memory networkInferenceData = NetworkInferenceData({
-            networkInference:             123456789012345678,
-            confidenceIntervalLowerBound: 10000000000000000,
-            confidenceIntervalUpperBound: 1000000000000000000,
+            networkInference: 123456789012345678,
+            confidenceIntervals: confidenceIntervals,
             topicId: 1,
             timestamp: block.timestamp - 5 minutes,
             extraData: ''

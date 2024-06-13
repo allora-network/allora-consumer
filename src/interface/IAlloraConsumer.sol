@@ -12,16 +12,19 @@ pragma solidity ^0.8.0;
 struct TopicValue {
     uint192 recentValue;
     uint64 recentValueTime;
-    uint256 recentConfidenceIntervalLowerBound;
-    uint256 recentConfidenceIntervalUpperBound;
+    ConfidenceIntervalValue[] confidenceIntervals;
+}
+
+struct ConfidenceIntervalValue {
+    uint256 confidenceInterval;
+    uint256 value;
 }
 
 struct NetworkInferenceData {
     uint256 networkInference;
     uint256 timestamp;
     uint256 topicId;
-    uint256 confidenceIntervalLowerBound;
-    uint256 confidenceIntervalUpperBound;
+    ConfidenceIntervalValue[] confidenceIntervals;
     bytes extraData;
 }
 
@@ -49,9 +52,8 @@ interface IAlloraConsumer {
         AlloraConsumerNetworkInferenceData memory nd
     ) external returns (
         uint256 networkInference, 
-        uint256 confidenceIntervalLowerBound,
-        uint256 confidenceIntervalUpperBound,
-        address aggregator
+        ConfidenceIntervalValue[] memory confidenceIntervals,
+        address dataProvider
     );
 
     /**
@@ -63,8 +65,7 @@ interface IAlloraConsumer {
         AlloraConsumerNetworkInferenceData memory nd
     ) external view returns (
         uint256 networkInference, 
-        uint256 confidenceIntervalLowerBound,
-        uint256 confidenceIntervalUpperBound,
+        ConfidenceIntervalValue[] memory confidenceIntervals,
         address dataProvider
     );
 
