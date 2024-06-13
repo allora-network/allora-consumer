@@ -9,13 +9,17 @@ pragma solidity ^0.8.0;
 // * ========================= STRUCTS ========================= *
 // ***************************************************************
 
-struct TopicValue { 
+struct TopicValue {
     uint192 recentValue;
     uint64 recentValueTime;
+    uint256[] confidenceIntervals;
+    uint256[] confidenceIntervalValues;
 }
 
 struct NetworkInferenceData {
     uint256 networkInference;
+    uint256[] confidenceIntervals;
+    uint256[] confidenceIntervalValues;
     uint256 timestamp;
     uint256 topicId;
     bytes extraData;
@@ -23,7 +27,7 @@ struct NetworkInferenceData {
 
 struct AlloraConsumerNetworkInferenceData {
     bytes signature;
-    NetworkInferenceData networkInferenceData;
+    NetworkInferenceData networkInference;
     bytes extraData;
 }
 
@@ -37,41 +41,49 @@ struct AlloraConsumerNetworkInferenceData {
 interface IAlloraConsumer {
 
     /**
-     * @notice Get a verified network inference for a given topic
+     * @notice Verify network inference and confidence interval for a given topic
      * 
-     * @param nd The network inference data to verify
+     * @param nd The network inference and confidence interval data to verify
      */
     function verifyNetworkInference(
         AlloraConsumerNetworkInferenceData memory nd
     ) external returns (
-        uint256 networkInference
+        uint256 networkInference, 
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
+        address dataProvider
     );
-  
+
     /**
-     * @notice Get a verified network inference for a given topic without mutating state
+     * @notice Verify network inference for a given topic without mutating state
      * 
      * @param nd The network inference data to verify
      */
     function verifyNetworkInferenceViewOnly(
-        AlloraConsumerNetworkInferenceData calldata nd
+        AlloraConsumerNetworkInferenceData memory nd
     ) external view returns (
-        uint256 networkInference
+        uint256 networkInference, 
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
+        address dataProvider
     );
 
     /**
      * @notice The message that must be signed by the provider to provide valid data
      *   recognized by verifyData
      * 
-     * @param networkInference The numerical data to verify
+     * @param networkInferenceData The numerical data to verify
      */
-    function getNetworkInferenceMessage(NetworkInferenceData memory networkInference) external view returns (bytes32);
+    function getNetworkInferenceMessage(
+        NetworkInferenceData memory networkInferenceData
+    ) external view returns (bytes32);
 
     /**
-     * @notice Get the topic data for a given topicId
+     * @notice Get the inference for a given topicId
      * 
-     * @param topicId The topicId to get the topic data for
-     * @param extraData The extraData to get the topic data for
+     * @param topicId The topicId to get the inference and confidence interval for
+     * @param extraData The extraData to get the inference and confidence interval for
      * @return topicValue The topic data
      */
-    function getTopicValue(uint256 topicId, bytes calldata extraData) external view returns (TopicValue memory);
+    function getTopicValue(uint256 topicId, bytes calldata extraData) external view returns (TopicValue memory topicValue);
 }

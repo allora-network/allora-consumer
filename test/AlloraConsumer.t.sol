@@ -8,15 +8,12 @@ import {
     NetworkInferenceData, 
     AlloraConsumerNetworkInferenceData
 } from "../src/interface/IAlloraConsumer.sol";
-import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
-import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
 import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
 
 
 contract AlloraConsumerTest is Test {
 
-    IAggregator aggregator;
     AlloraConsumer alloraConsumer;
 
     address admin = address(100);
@@ -40,11 +37,7 @@ contract AlloraConsumerTest is Test {
     function setUp() public {
         vm.warp(2 hours);
 
-        aggregator = new AverageAggregator();
-        alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({
-            owner: admin,
-            aggregator: aggregator
-        }));
+        alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({ owner: admin }));
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
@@ -112,34 +105,48 @@ contract AlloraConsumerTest is Test {
         assertEq(recentValueTime1, timestamp);
     }
 
-
     function test_canCallVerifyDataWithFutureTime() public {
         vm.startPrank(admin);
         alloraConsumer.addDataProvider(signer0);
+        alloraConsumer.updateFutureDataValiditySeconds(30 minutes);
         vm.stopPrank();
 
         NetworkInferenceData memory nd = _dummyNetworkInferenceData();
-        nd.timestamp = uint64(block.timestamp + 1 minutes);
+        nd.timestamp = uint64((block.timestamp + 30 minutes) - 1);
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
         alloraConsumer.verifyNetworkInference(alloraNd);
     }
 
-    function test_canCallVerifyDataWithTimeTooFarIntoTheFuture() public {
+    function test_canCallVerifyDataWithPastTime() public {
         vm.startPrank(admin);
         alloraConsumer.addDataProvider(signer0);
+        alloraConsumer.updatePastDataValiditySeconds(30 minutes);
         vm.stopPrank();
 
         NetworkInferenceData memory nd = _dummyNetworkInferenceData();
-        nd.timestamp = uint64(block.timestamp + 20 minutes);
+        nd.timestamp = uint64((block.timestamp - 30 minutes) + 1);
+
+        AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
+
+        alloraConsumer.verifyNetworkInference(alloraNd);
+    }
+
+    function test_cantCallVerifyDataWithTimeTooFarIntoTheFuture() public {
+        vm.startPrank(admin);
+        alloraConsumer.addDataProvider(signer0);
+        alloraConsumer.updateFutureDataValiditySeconds(30 minutes);
+        vm.stopPrank();
+
+        NetworkInferenceData memory nd = _dummyNetworkInferenceData();
+        nd.timestamp = uint64(block.timestamp + 30 minutes + 1);
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
         vm.expectRevert(abi.encodeWithSignature("AlloraConsumerInvalidDataTime()"));
         alloraConsumer.verifyNetworkInference(alloraNd);
     }
-
 
     function test_cantCallVerifyDataWithExpiredTime() public {
         vm.startPrank(admin);
@@ -171,8 +178,8 @@ contract AlloraConsumerTest is Test {
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
-        uint256 numericValue = alloraConsumer.verifyNetworkInference(alloraNd);
-        uint256 numericValueView = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
+        (uint256 numericValue,,,) = alloraConsumer.verifyNetworkInference(alloraNd);
+        (uint256 numericValueView,,,) = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
         assertEq(numericValue, nd.networkInference);
         assertEq(numericValue, numericValueView);
     }
@@ -223,17 +230,32 @@ contract AlloraConsumerTest is Test {
     }
 
     // ***************************************************************
-    // * ================= INTERNAL HELPERS ======================== *
+    // * ========= INTERNAL HELPERS NETWORK INFERENCE ============== *
     // ***************************************************************
-    function _dummyNetworkInferenceData() internal view returns (NetworkInferenceData memory) {
+
+    function _dummyNetworkInferenceData() internal view returns (
+        NetworkInferenceData memory
+    ) {
+        uint256[] memory confidenceIntervals = new uint256[](2);
+        confidenceIntervals[0] = 15870000000000000000;
+        confidenceIntervals[1] = 97720000000000000000;
+
+        uint256[] memory confidenceIntervalValues = new uint256[](2);
+        confidenceIntervalValues[0] = 1000000000000000000;
+        confidenceIntervalValues[1] = 2000000000000000000;
+
+
 
         return NetworkInferenceData({
             networkInference: 123456789012345678,
             topicId: 1,
+            confidenceIntervals: confidenceIntervals,
+            confidenceIntervalValues: confidenceIntervalValues,
             timestamp: block.timestamp,
             extraData: ''
         });
     }
+
 
     function _signNetworkInferenceData(
         NetworkInferenceData memory networkInferenceData,
@@ -254,8 +276,8 @@ contract AlloraConsumerTest is Test {
     ) internal pure returns (AlloraConsumerNetworkInferenceData memory) {
 
         return AlloraConsumerNetworkInferenceData({
-            networkInferenceData: networkInferenceData,
             signature: signature,
+            networkInference: networkInferenceData,
             extraData: ''
         });
     }

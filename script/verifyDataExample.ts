@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: BUSL-1.1
 
-import { AlloraAdapter__factory } from '../types/factories/AlloraAdapter__factory'
-import { AlloraAdapter } from '../types/AlloraAdapter';
+import { AlloraConsumer__factory } from '../types/factories/AlloraConsumer__factory'
+import { AlloraConsumer } from '../types/AlloraConsumer';
 import { ethers, BigNumberish, BytesLike } from 'ethers';
 import * as dotenv from 'dotenv';
 
 // to run: ts-node script/verifyDataExample.ts
 
-const ALLORA_ADAPTER_NAME = 'AlloraAdapter'
-const ALLORA_ADAPTER_VERSION = 1
-const ALLORA_ADAPTER_ADDRESS = '0xBEd9F9B7509288fCfe4d49F761C625C832e6264A'
-const ALLORA_ADAPTER_CHAIN_ID = 11155111
+const ALLORA_CONSUMER_NAME = 'AlloraConsumer'
+const ALLORA_CONSUMER_VERSION = 1
+const ALLORA_CONSUMER_ADDRESS = '0xBEd9F9B7509288fCfe4d49F761C625C832e6264A'
+const ALLORA_CONSUMER_CHAIN_ID = 11155111
 
-type NumericDataStruct = {
+type NetworkInferenceDataStruct = {
   topicId: BigNumberish
   timestamp: BigNumberish
+  networkInference: BigNumberish
+  confidenceIntervalLowerBound: BigNumberish
+  confidenceIntervalUpperBound: BigNumberish
   extraData: BytesLike
-  numericValues: BigNumberish[]
 };
 
 // hex string of the format '0xf9a0b2c3...'
@@ -31,17 +33,17 @@ const hexStringToByteArray = (rawHexString: string) => {
 }
 
 const constructMessageLocally = async (
-  numericData: NumericDataStruct, 
+  networkInference: NetworkInferenceDataStruct, 
   config: {
     chainId: number,
-    alloraAdapterAddress: string,
+    alloraConsumerAddress: string,
   }
 ) => {
   const keccak = ethers.keccak256
   const coder = new ethers.AbiCoder()
   const toBytes = ethers.toUtf8Bytes
 
-  const { chainId, alloraAdapterAddress } = config
+  const { chainId, alloraConsumerAddress } = config
 
   const numericDataTypehash = keccak(toBytes('NumericData(uint256 topicId,uint256 timestamp,bytes extraData,uint256[] numericValues)'))
 
@@ -49,10 +51,10 @@ const constructMessageLocally = async (
     ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
     [
       keccak(toBytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
-      keccak(toBytes(ALLORA_ADAPTER_NAME)),
-      keccak(toBytes(ALLORA_ADAPTER_VERSION.toString())),
+      keccak(toBytes(ALLORA_CONSUMER_NAME)),
+      keccak(toBytes(ALLORA_CONSUMER_VERSION.toString())),
       chainId.toString(),
-      alloraAdapterAddress,
+      alloraConsumerAddress,
     ]
   ))
 
@@ -60,10 +62,12 @@ const constructMessageLocally = async (
     ['bytes32', 'uint256', 'uint256', 'bytes', 'bytes'],
     [
       numericDataTypehash,
-      numericData.topicId, 
-      numericData.timestamp, 
-      numericData.extraData,
-      coder.encode(['uint256[]'], [numericData.numericValues]), 
+      networkInference.networkInference,
+      networkInference.timestamp, 
+      networkInference.topicId, 
+      networkInference.confidenceIntervalLowerBound,
+      networkInference.confidenceIntervalUpperBound,
+      networkInference.extraData,
     ]
   ))
 
@@ -76,19 +80,19 @@ const constructMessageLocally = async (
 }
 
 const signMessageLocally = async (
-  numericData: NumericDataStruct, 
+  numericData: NetworkInferenceDataStruct, 
   config: {
     chainId: number
-    alloraAdapterAddress: string
+    alloraConsumerAddress: string
     privateKey: string
   }
 ) => {
-  const { chainId, alloraAdapterAddress, privateKey } = config
+  const { chainId, alloraConsumerAddress, privateKey } = config
   const wallet = new ethers.Wallet(privateKey)
 
   const message = await constructMessageLocally(
     numericData, 
-    { chainId, alloraAdapterAddress }
+    { chainId, alloraConsumerAddress }
   )
   const messageBytes = hexStringToByteArray(message)
 
@@ -104,26 +108,28 @@ const run = async () => {
   const provider = new ethers.JsonRpcProvider(rpcUrl)
   const wallet = new ethers.Wallet(privateKey, provider)
 
-  const alloraAdapter = (new AlloraAdapter__factory()).attach(ALLORA_ADAPTER_ADDRESS).connect(wallet) as AlloraAdapter
+  const alloraConsumer = (new AlloraConsumer__factory()).attach(ALLORA_CONSUMER_ADDRESS).connect(wallet) as AlloraConsumer
 
-  const numericData: NumericDataStruct = {
+  const networkInferenceData: NetworkInferenceDataStruct = {
     topicId: 1,
     timestamp: Math.floor(Date.now() / 1000) - (60 * 5),
     extraData: ethers.toUtf8Bytes(''),
-    numericValues: ['123456789012345678'],
+    networkInference:             '123456789012345678',
+    confidenceIntervalLowerBound: '10000000000000000',
+    confidenceIntervalUpperBound: '1000000000000000000',
   }
 
-  console.info('verifying numericData')
-  console.info({numericData})
+  console.info('verifying networkInferenceData')
+  console.info({networkInferenceData})
 
-  const message = await alloraAdapter.getMessage(numericData)
+  const message = await alloraConsumer.getNetworkInferenceMessage(networkInferenceData)
   const messageBytes = hexStringToByteArray(message)
 
   // sign the message with the private key
   const signature = await wallet.signMessage(messageBytes)
-  const localSignature = await signMessageLocally(numericData, { 
-    chainId: ALLORA_ADAPTER_CHAIN_ID,
-    alloraAdapterAddress: ALLORA_ADAPTER_ADDRESS, 
+  const localSignature = await signMessageLocally(networkInferenceData, { 
+    chainId: ALLORA_CONSUMER_CHAIN_ID,
+    alloraConsumerAddress: ALLORA_CONSUMER_ADDRESS, 
     privateKey 
   })
 
@@ -133,8 +139,8 @@ const run = async () => {
     throw new Error('local signature does not match remote. Check chainId.')
   }
 
-  const tx = await alloraAdapter.verifyData({
-    numericData: numericData, 
+  const tx = await alloraConsumer.verifyNetworkInference({
+    networkInference: networkInferenceData, 
     signature: signature,
     extraData: ethers.toUtf8Bytes(''),
   })

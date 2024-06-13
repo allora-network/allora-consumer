@@ -6,7 +6,10 @@ import '../lib/forge-std/src/Script.sol';
 import { AlloraConsumer } from '../src/AlloraConsumer.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
-import { NetworkInferenceData, AlloraConsumerNetworkInferenceData } from '../src/interface/IAlloraConsumer.sol';
+import { 
+  NetworkInferenceData, 
+  AlloraConsumerNetworkInferenceData
+} from '../src/interface/IAlloraConsumer.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 // run with 
@@ -26,8 +29,19 @@ contract VerifyNetworkInferenceDataExample is Script {
         uint256[] memory numericValues = new uint256[](1);
         numericValues[0] = 123456789012345678;
 
+
+        uint256[] memory confidenceIntervals = new uint256[](2);
+        confidenceIntervals[0] = 15870000000000000000;
+        confidenceIntervals[1] = 97720000000000000000;
+
+        uint256[] memory confidenceIntervalValues = new uint256[](2);
+        confidenceIntervalValues[0] = 1000000000000000000;
+        confidenceIntervalValues[1] = 2000000000000000000;
+
         NetworkInferenceData memory networkInferenceData = NetworkInferenceData({
             networkInference: 123456789012345678,
+            confidenceIntervals: confidenceIntervals,
+            confidenceIntervalValues: confidenceIntervalValues,
             topicId: 1,
             timestamp: block.timestamp - 5 minutes,
             extraData: ''
@@ -42,7 +56,7 @@ contract VerifyNetworkInferenceDataExample is Script {
 
         alloraConsumer.verifyNetworkInference(AlloraConsumerNetworkInferenceData({
             signature: abi.encodePacked(r, s, v),
-            networkInferenceData: networkInferenceData,
+            networkInference: networkInferenceData,
             extraData: ''
         }));
 

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { IAlloraConsumer, TopicValue, AlloraConsumerNetworkInferenceData } from '../interface/IAlloraConsumer.sol';
+import { 
+  IAlloraConsumer, 
+  TopicValue, 
+  AlloraConsumerNetworkInferenceData
+} from '../interface/IAlloraConsumer.sol';
 import { Ownable2Step } from "../../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
@@ -36,7 +40,12 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
             revert('AlloraConsumerBringPredictionOnChainExample: stale value');
         }
 
-        _protocolFunctionRequiringPredictionValue(protocolFunctionArgument, topicValue.recentValue);
+        _protocolFunctionRequiringPredictionValue(
+            protocolFunctionArgument, 
+            topicValue.recentValue,
+            topicValue.confidenceIntervals,
+            topicValue.confidenceIntervalValues
+        );
     }
 
     /**
@@ -49,12 +58,26 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
         uint256 protocolFunctionArgument,
         AlloraConsumerNetworkInferenceData calldata alloraNetworkInferenceData
     ) external payable {
-        uint256 value = IAlloraConsumer(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyNetworkInference(alloraNetworkInferenceData);
+        (
+            uint256 value,
+            uint256[] memory confidenceIntervals,
+            uint256[] memory confidenceIntervalValues,
+        ) = IAlloraConsumer(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyNetworkInference(alloraNetworkInferenceData);
 
-        _protocolFunctionRequiringPredictionValue(protocolFunctionArgument, value);
+        _protocolFunctionRequiringPredictionValue(
+            protocolFunctionArgument, 
+            value,
+            confidenceIntervals,
+            confidenceIntervalValues
+        );
     }
 
-    function _protocolFunctionRequiringPredictionValue(uint256 protocolFunctionArgument, uint256 value) internal {
+    function _protocolFunctionRequiringPredictionValue(
+        uint256 protocolFunctionArgument, 
+        uint256 value,
+        uint256[] memory confidenceIntervals,
+        uint256[] memory confidenceIntervalValues
+    ) internal {
         // use arguments and value 
     }
 

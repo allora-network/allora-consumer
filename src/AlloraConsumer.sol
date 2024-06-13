@@ -8,7 +8,7 @@ import {
   IAlloraConsumer, 
   TopicValue, 
   NetworkInferenceData,
-  AlloraConsumerNetworkInferenceData 
+  AlloraConsumerNetworkInferenceData
 } from './interface/IAlloraConsumer.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
@@ -17,7 +17,6 @@ import { EIP712 } from "../lib/openzeppelin-contracts/contracts/utils/cryptograp
 
 struct AlloraConsumerConstructorArgs {
     address owner;
-    IAggregator aggregator;
 }
 
 
@@ -37,9 +36,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         "NumericData(uint256 topicId,uint256 timestamp,bytes extraData,uint256[] numericValues)"
     );
 
-    /// @dev The aggregator to use for aggregating numeric data
-    IAggregator public aggregator;
-
     /// @dev The number of seconds a timestamp can be in the past and still be valid
     uint48 public pastDataValiditySeconds = 1 hours;
 
@@ -51,8 +47,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         EIP712("AlloraConsumer", "1") 
     {
         _transferOwnership(args.owner);
-
-        aggregator = args.aggregator;
     }
 
     // ***************************************************************
@@ -62,6 +56,12 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     // main interface events
     event AlloraConsumerVerifiedData(uint256 topicId, uint256 numericData, address dataProvider, bytes extraData);
     event AlloraConsumerVerifiedNetworkInferenceData(uint256 networkInference, uint256 timestamp, uint256 topicId, bytes extraData);
+    event AlloraConsumerVerifiedNetworkInferenceDataAndInterval(
+        uint256 networkInference, 
+        uint256 timestamp, 
+        uint256 topicId, 
+        bytes extraData
+    );
 
     // allora consumer admin updates
     event AlloraConsumerAdminTurnedOff();
@@ -70,7 +70,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     event AlloraConsumerOwnerRemovedDataProvider(address dataProvider);
     event AlloraConsumerOwnerUpdatedPastDataValiditySeconds(uint48 pastDataValiditySeconds);
     event AlloraConsumerOwnerUpdatedFutureDataValiditySeconds(uint48 futureDataValiditySeconds);
-    event AlloraConsumerOwnerUpdatedAggregator(IAggregator aggregator);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -94,54 +93,86 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     // ***************************************************************
 
     ///@inheritdoc IAlloraConsumer
-    function verifyNetworkInference(
+    function verifyNetworkInferenceViewOnly(
         AlloraConsumerNetworkInferenceData memory nd
-    ) external override returns (
-        uint256 networkInference
+    ) external view override returns (
+        uint256 networkInference, 
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
+        address dataProvider
     ) {
-        (networkInference, ) = _verifyNetworkInferenceData(nd);
-
-        topicValue[nd.networkInferenceData.topicId][nd.networkInferenceData.extraData] = TopicValue({
-            recentValue: _toUint192(networkInference),
-            recentValueTime: _toUint64(block.timestamp)
-        });
-
-        emit AlloraConsumerVerifiedNetworkInferenceData(
+        (
             networkInference, 
-            nd.networkInferenceData.timestamp, 
-            nd.networkInferenceData.topicId, 
-            nd.networkInferenceData.extraData
+            confidenceIntervals,
+            confidenceIntervalValues,
+            dataProvider
+        ) = _verifyNetworkInferenceData(
+            nd
         );
     }
 
     ///@inheritdoc IAlloraConsumer
-    function verifyNetworkInferenceViewOnly(
+    function verifyNetworkInference(
         AlloraConsumerNetworkInferenceData memory nd
-    ) external view override returns (
-        uint256 networkInference
+    ) external override returns (
+        uint256 networkInference, 
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
+        address dataProvider
     ) {
-        (networkInference, ) = _verifyNetworkInferenceData(nd);
+        (
+            networkInference, 
+            confidenceIntervals, 
+            confidenceIntervalValues, 
+            dataProvider
+        ) = _verifyNetworkInferenceData(
+            nd
+        );
+
+        topicValue[nd.networkInference.topicId][nd.networkInference.extraData] = 
+            TopicValue({
+                recentValue: _toUint192(networkInference),
+                recentValueTime: _toUint64(block.timestamp),
+                confidenceIntervals: confidenceIntervals,
+                confidenceIntervalValues: confidenceIntervalValues
+            });
+
+
+        emit AlloraConsumerVerifiedNetworkInferenceDataAndInterval(
+            networkInference, 
+            nd.networkInference.timestamp, 
+            nd.networkInference.topicId, 
+            nd.networkInference.extraData
+        );
     }
 
     function _verifyNetworkInferenceData(
         AlloraConsumerNetworkInferenceData memory nd
     ) internal view returns (
         uint256 networkInference, 
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         if (!switchedOn) {
             revert AlloraConsumerNotSwitchedOn();
         }
 
+        uint256 timestamp = nd.networkInference.timestamp;
+
         if (
-            nd.networkInferenceData.timestamp + pastDataValiditySeconds < block.timestamp ||
-            block.timestamp + futureDataValiditySeconds <  nd.networkInferenceData.timestamp
+            timestamp + pastDataValiditySeconds < block.timestamp ||
+            block.timestamp + futureDataValiditySeconds < timestamp
         ) {
             revert AlloraConsumerInvalidDataTime();
         }
 
         dataProvider = ECDSA.recover(
-            ECDSA.toEthSignedMessageHash(getNetworkInferenceMessage(nd.networkInferenceData)), 
+            ECDSA.toEthSignedMessageHash(
+                getNetworkInferenceMessage(
+                    nd.networkInference
+                )
+            ), 
             nd.signature
         );
 
@@ -149,36 +180,31 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
             revert AlloraConsumerInvalidDataProvider();
         }
 
-        networkInference = nd.networkInferenceData.networkInference;
+        networkInference = nd.networkInference.networkInference;
+        confidenceIntervals = nd.networkInference.confidenceIntervals;
+        confidenceIntervalValues = nd.networkInference.confidenceIntervalValues;
     }
+    
 
     // ***************************************************************
     // * ===================== VIEW FUNCTIONS ====================== *
     // ***************************************************************
 
-    /**
-     * @notice The message that must be signed by the provider to provide valid data
-     *   recognized by verifyNetworkInference
-     * 
-     * @param networkInference The numerical data to verify
-     */
-    function getNetworkInferenceMessage(NetworkInferenceData memory networkInference) public view override returns (bytes32) {
+    ///@inheritdoc IAlloraConsumer
+    function getNetworkInferenceMessage(
+        NetworkInferenceData memory networkInferenceData
+    ) public view override returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
             NUMERIC_DATA_TYPEHASH,
-            networkInference.networkInference,
-            networkInference.timestamp,
-            networkInference.topicId,
-            networkInference.extraData
+            networkInferenceData.networkInference,
+            networkInferenceData.timestamp,
+            networkInferenceData.topicId,
+            networkInferenceData.confidenceIntervals,
+            networkInferenceData.extraData
         )));
     }
 
-    /**
-     * @notice Get the topic data for a given topicId
-     * 
-     * @param topicId The topicId to get the topic data for
-     * @param extraData The extraData to get the topic data for
-     * @return topicValue The topic data
-     */
+    ///@inheritdoc IAlloraConsumer
     function getTopicValue(
         uint256 topicId, 
         bytes calldata extraData
@@ -239,21 +265,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         pastDataValiditySeconds = _pastDataValiditySeconds;
 
         emit AlloraConsumerOwnerUpdatedPastDataValiditySeconds(pastDataValiditySeconds);
-    }
-
-    /**
-     * @notice Topic owner function to update the aggregator to use for aggregating numeric data
-     * 
-     * @param _aggregator The aggregator to use for aggregating numeric data
-     */
-    function updateAggregator(IAggregator _aggregator) external onlyOwner {
-        if (address(_aggregator) == address(0)) {
-            revert AlloraConsumerInvalidAggregator();
-        }
-
-        aggregator = _aggregator;
-
-        emit AlloraConsumerOwnerUpdatedAggregator(aggregator);
     }
 
     /**

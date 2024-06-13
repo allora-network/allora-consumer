@@ -5,15 +5,12 @@ import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { AlloraConsumer, AlloraConsumerConstructorArgs } from "../src/AlloraConsumer.sol";
 import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
-import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
-import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
 import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
 
 contract AlloraConsumerAdmin is Test {
 
     EvenFeeHandler public evenFeeHandler;
-    IAggregator aggregator;
     AlloraConsumer alloraConsumer;
 
     address admin = address(100);
@@ -40,8 +37,7 @@ contract AlloraConsumerAdmin is Test {
     function setUp() public {
         vm.warp(1 hours);
 
-        aggregator = new AverageAggregator();
-        alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({ owner: admin, aggregator: aggregator }));
+        alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({ owner: admin }));
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
@@ -144,36 +140,6 @@ contract AlloraConsumerAdmin is Test {
         alloraConsumer.removeDataProvider(newDataProvider);
 
         assertEq(alloraConsumer.validDataProvider(newDataProvider), false);
-    }
-
-    // ***************************************************************
-    // * ================= UPDATE AGGREGATOR ======================= *
-    // ***************************************************************
-
-    function test_imposterCantUpdateAggregator() public {
-        vm.startPrank(imposter);
-
-        vm.expectRevert("Ownable: caller is not the owner");
-        alloraConsumer.updateAggregator(dummyAggregator);
-    }
-
-    function test_ownerCantUpdateAggregatorToZeroAddress() public {
-        vm.startPrank(admin);
-
-        vm.expectRevert(abi.encodeWithSignature("AlloraConsumerInvalidAggregator()"));
-        alloraConsumer.updateAggregator(IAggregator(address(0)));
-    }
-
-    function test_ownerCanUpdateAggregator() public {
-        vm.startPrank(admin);
-
-        MedianAggregator medianAggregator = new MedianAggregator();
-
-        assertEq(address(alloraConsumer.aggregator()), address(aggregator));
-
-        alloraConsumer.updateAggregator(medianAggregator);
-
-        assertEq(address(alloraConsumer.aggregator()), address(medianAggregator));
     }
 
     // ***************************************************************
