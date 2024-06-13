@@ -17,7 +17,6 @@ import { EIP712 } from "../lib/openzeppelin-contracts/contracts/utils/cryptograp
 
 struct AlloraConsumerConstructorArgs {
     address owner;
-    IAggregator aggregator;
 }
 
 
@@ -37,9 +36,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         "NumericData(uint256 topicId,uint256 timestamp,bytes extraData,uint256[] numericValues)"
     );
 
-    /// @dev The aggregator to use for aggregating numeric data
-    IAggregator public aggregator;
-
     /// @dev The number of seconds a timestamp can be in the past and still be valid
     uint48 public pastDataValiditySeconds = 1 hours;
 
@@ -51,8 +47,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         EIP712("AlloraConsumer", "1") 
     {
         _transferOwnership(args.owner);
-
-        aggregator = args.aggregator;
     }
 
     // ***************************************************************
@@ -78,7 +72,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     event AlloraConsumerOwnerRemovedDataProvider(address dataProvider);
     event AlloraConsumerOwnerUpdatedPastDataValiditySeconds(uint48 pastDataValiditySeconds);
     event AlloraConsumerOwnerUpdatedFutureDataValiditySeconds(uint48 futureDataValiditySeconds);
-    event AlloraConsumerOwnerUpdatedAggregator(IAggregator aggregator);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -282,21 +275,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         pastDataValiditySeconds = _pastDataValiditySeconds;
 
         emit AlloraConsumerOwnerUpdatedPastDataValiditySeconds(pastDataValiditySeconds);
-    }
-
-    /**
-     * @notice Topic owner function to update the aggregator to use for aggregating numeric data
-     * 
-     * @param _aggregator The aggregator to use for aggregating numeric data
-     */
-    function updateAggregator(IAggregator _aggregator) external onlyOwner {
-        if (address(_aggregator) == address(0)) {
-            revert AlloraConsumerInvalidAggregator();
-        }
-
-        aggregator = _aggregator;
-
-        emit AlloraConsumerOwnerUpdatedAggregator(aggregator);
     }
 
     /**

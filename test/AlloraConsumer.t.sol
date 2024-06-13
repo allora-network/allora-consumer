@@ -8,15 +8,12 @@ import {
     NetworkInferenceData, 
     AlloraConsumerNetworkInferenceData
 } from "../src/interface/IAlloraConsumer.sol";
-import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
-import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
 import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
 
 
 contract AlloraConsumerTest is Test {
 
-    IAggregator aggregator;
     AlloraConsumer alloraConsumer;
 
     address admin = address(100);
@@ -40,11 +37,7 @@ contract AlloraConsumerTest is Test {
     function setUp() public {
         vm.warp(2 hours);
 
-        aggregator = new AverageAggregator();
-        alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({
-            owner: admin,
-            aggregator: aggregator
-        }));
+        alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({ owner: admin }));
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
