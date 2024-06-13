@@ -27,7 +27,9 @@ contract VerifyNetworkInferenceDataExample is Script {
         numericValues[0] = 123456789012345678;
 
         NetworkInferenceData memory networkInferenceData = NetworkInferenceData({
-            networkInference: 123456789012345678,
+            networkInference:             123456789012345678,
+            confidenceIntervalLowerBound: 10000000000000000,
+            confidenceIntervalUpperBound: 1000000000000000000,
             topicId: 1,
             timestamp: block.timestamp - 5 minutes,
             extraData: ''
@@ -42,7 +44,7 @@ contract VerifyNetworkInferenceDataExample is Script {
 
         alloraConsumer.verifyNetworkInference(AlloraConsumerNetworkInferenceData({
             signature: abi.encodePacked(r, s, v),
-            networkInferenceData: networkInferenceData,
+            networkInference: networkInferenceData,
             extraData: ''
         }));
 

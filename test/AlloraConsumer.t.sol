@@ -6,9 +6,7 @@ import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptograph
 import { AlloraConsumer, AlloraConsumerConstructorArgs } from "../src/AlloraConsumer.sol";
 import { 
     NetworkInferenceData, 
-    NetworkInferenceAndConfidenceIntervalData,
-    AlloraConsumerNetworkInferenceData,
-    AlloraConsumerNetworkInferenceAndConfidenceIntervalData
+    AlloraConsumerNetworkInferenceData
 } from "../src/interface/IAlloraConsumer.sol";
 import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
 import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
@@ -187,8 +185,8 @@ contract AlloraConsumerTest is Test {
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
-        (uint256 numericValue,) = alloraConsumer.verifyNetworkInference(alloraNd);
-        (uint256 numericValueView,) = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
+        (uint256 numericValue,,,) = alloraConsumer.verifyNetworkInference(alloraNd);
+        (uint256 numericValueView,,,) = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
         assertEq(numericValue, nd.networkInference);
         assertEq(numericValue, numericValueView);
     }
@@ -241,15 +239,21 @@ contract AlloraConsumerTest is Test {
     // ***************************************************************
     // * ========= INTERNAL HELPERS NETWORK INFERENCE ============== *
     // ***************************************************************
-    function _dummyNetworkInferenceData() internal view returns (NetworkInferenceData memory) {
+
+    function _dummyNetworkInferenceData() internal view returns (
+        NetworkInferenceData memory
+    ) {
 
         return NetworkInferenceData({
             networkInference: 123456789012345678,
             topicId: 1,
+            confidenceIntervalLowerBound: 123456789012345678,
+            confidenceIntervalUpperBound: 1000000000000000000,
             timestamp: block.timestamp,
             extraData: ''
         });
     }
+
 
     function _signNetworkInferenceData(
         NetworkInferenceData memory networkInferenceData,
@@ -270,8 +274,8 @@ contract AlloraConsumerTest is Test {
     ) internal pure returns (AlloraConsumerNetworkInferenceData memory) {
 
         return AlloraConsumerNetworkInferenceData({
-            networkInferenceData: networkInferenceData,
             signature: signature,
+            networkInference: networkInferenceData,
             extraData: ''
         });
     }
@@ -283,62 +287,6 @@ contract AlloraConsumerTest is Test {
         return _packageNetworkInferenceData(
             networkInferenceData, 
             _signNetworkInferenceData(networkInferenceData, signerPk)
-        );
-    }
-
-    // ***************************************************************
-    // * ==== INTERNAL HELPERS NETWORK INFERENCE AND INTERVAL ====== *
-    // ***************************************************************
-
-    // TODO use the following in tests once we decide if we are going to implement both 
-    // NetworkInferenceAndConfidenceIntervalData and NetworkInferenceData
-    function _dummyNetworkInferenceAndConfidenceIntervalData() internal view returns (
-        NetworkInferenceAndConfidenceIntervalData memory
-    ) {
-
-        return NetworkInferenceAndConfidenceIntervalData({
-            networkInference: 123456789012345678,
-            topicId: 1,
-            confidenceIntervalLowerBound: 123456789012345678,
-            confidenceIntervalUpperBound: 1000000000000000000,
-            timestamp: block.timestamp,
-            extraData: ''
-        });
-    }
-
-
-    function _signNetworkInferenceAndConfidenceIntervalData(
-        NetworkInferenceAndConfidenceIntervalData memory networkInferenceAndCIData,
-        uint256 signerPk
-    ) internal view returns (bytes memory signature) {
-        bytes32 message = alloraConsumer.getNetworkInferenceAndConfidenceIntervalMessage(networkInferenceAndCIData);
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            signerPk, 
-            ECDSA.toEthSignedMessageHash(message)
-        );
-        signature = abi.encodePacked(r, s, v);
-    }
-
-    function _packageNetworkInferenceAndConfidenceIntervalData(
-        NetworkInferenceAndConfidenceIntervalData memory networkInferenceAndCIData,
-        bytes memory signature
-    ) internal pure returns (AlloraConsumerNetworkInferenceAndConfidenceIntervalData memory) {
-
-        return AlloraConsumerNetworkInferenceAndConfidenceIntervalData({
-            signature: signature,
-            networkInferenceAndInterval: networkInferenceAndCIData,
-            extraData: ''
-        });
-    }
-
-    function _packageAndSignNetworkInferenceAndConfidenceIntervalData(
-        NetworkInferenceAndConfidenceIntervalData memory networkInferenceData,
-        uint256 signerPk
-    ) internal view returns (AlloraConsumerNetworkInferenceAndConfidenceIntervalData memory) {
-        return _packageNetworkInferenceAndConfidenceIntervalData(
-            networkInferenceData, 
-            _signNetworkInferenceAndConfidenceIntervalData(networkInferenceData, signerPk)
         );
     }
 }

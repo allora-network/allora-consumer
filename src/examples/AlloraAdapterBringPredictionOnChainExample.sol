@@ -49,7 +49,7 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
         uint256 protocolFunctionArgument,
         AlloraConsumerNetworkInferenceData calldata alloraNetworkInferenceData
     ) external payable {
-        (uint256 value,) = IAlloraConsumer(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyNetworkInference(alloraNetworkInferenceData);
+        (uint256 value,,,) = IAlloraConsumer(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyNetworkInference(alloraNetworkInferenceData);
 
         _protocolFunctionRequiringPredictionValue(protocolFunctionArgument, value);
     }
