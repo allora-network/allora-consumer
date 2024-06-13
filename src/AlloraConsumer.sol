@@ -8,7 +8,6 @@ import {
   IAlloraConsumer, 
   TopicValue, 
   NetworkInferenceData,
-  ConfidenceIntervalValue,
   AlloraConsumerNetworkInferenceData
 } from './interface/IAlloraConsumer.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
@@ -98,12 +97,14 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         AlloraConsumerNetworkInferenceData memory nd
     ) external view override returns (
         uint256 networkInference, 
-        ConfidenceIntervalValue[] memory confidenceIntervals,
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         (
             networkInference, 
             confidenceIntervals,
+            confidenceIntervalValues,
             dataProvider
         ) = _verifyNetworkInferenceData(
             nd
@@ -115,12 +116,14 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         AlloraConsumerNetworkInferenceData memory nd
     ) external override returns (
         uint256 networkInference, 
-        ConfidenceIntervalValue[] memory confidenceIntervals,
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         (
             networkInference, 
-            confidenceIntervals,
+            confidenceIntervals, 
+            confidenceIntervalValues, 
             dataProvider
         ) = _verifyNetworkInferenceData(
             nd
@@ -129,9 +132,11 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         topicValue[nd.networkInference.topicId][nd.networkInference.extraData] = 
             TopicValue({
                 recentValue: _toUint192(networkInference),
+                recentValueTime: _toUint64(block.timestamp),
                 confidenceIntervals: confidenceIntervals,
-                recentValueTime: _toUint64(block.timestamp)
+                confidenceIntervalValues: confidenceIntervalValues
             });
+
 
         emit AlloraConsumerVerifiedNetworkInferenceDataAndInterval(
             networkInference, 
@@ -145,7 +150,8 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         AlloraConsumerNetworkInferenceData memory nd
     ) internal view returns (
         uint256 networkInference, 
-        ConfidenceIntervalValue[] memory confidenceIntervals,
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         if (!switchedOn) {
@@ -176,6 +182,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
 
         networkInference = nd.networkInference.networkInference;
         confidenceIntervals = nd.networkInference.confidenceIntervals;
+        confidenceIntervalValues = nd.networkInference.confidenceIntervalValues;
     }
     
 

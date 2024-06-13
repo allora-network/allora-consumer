@@ -12,19 +12,16 @@ pragma solidity ^0.8.0;
 struct TopicValue {
     uint192 recentValue;
     uint64 recentValueTime;
-    ConfidenceIntervalValue[] confidenceIntervals;
-}
-
-struct ConfidenceIntervalValue {
-    uint256 confidenceInterval;
-    uint256 value;
+    uint256[] confidenceIntervals;
+    uint256[] confidenceIntervalValues;
 }
 
 struct NetworkInferenceData {
     uint256 networkInference;
+    uint256[] confidenceIntervals;
+    uint256[] confidenceIntervalValues;
     uint256 timestamp;
     uint256 topicId;
-    ConfidenceIntervalValue[] confidenceIntervals;
     bytes extraData;
 }
 
@@ -52,7 +49,8 @@ interface IAlloraConsumer {
         AlloraConsumerNetworkInferenceData memory nd
     ) external returns (
         uint256 networkInference, 
-        ConfidenceIntervalValue[] memory confidenceIntervals,
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
         address dataProvider
     );
 
@@ -65,7 +63,8 @@ interface IAlloraConsumer {
         AlloraConsumerNetworkInferenceData memory nd
     ) external view returns (
         uint256 networkInference, 
-        ConfidenceIntervalValue[] memory confidenceIntervals,
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
         address dataProvider
     );
 
@@ -80,11 +79,11 @@ interface IAlloraConsumer {
     ) external view returns (bytes32);
 
     /**
-     * @notice Get the inference and confidence interval for a given topicId
+     * @notice Get the inference for a given topicId
      * 
      * @param topicId The topicId to get the inference and confidence interval for
      * @param extraData The extraData to get the inference and confidence interval for
      * @return topicValue The topic data
      */
-    function getTopicValue(uint256 topicId, bytes calldata extraData) external view returns (TopicValue memory);
+    function getTopicValue(uint256 topicId, bytes calldata extraData) external view returns (TopicValue memory topicValue);
 }

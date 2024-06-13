@@ -8,8 +8,7 @@ import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
 import { 
   NetworkInferenceData, 
-  AlloraConsumerNetworkInferenceData,
-  ConfidenceIntervalValue
+  AlloraConsumerNetworkInferenceData
 } from '../src/interface/IAlloraConsumer.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
@@ -31,19 +30,18 @@ contract VerifyNetworkInferenceDataExample is Script {
         numericValues[0] = 123456789012345678;
 
 
-        ConfidenceIntervalValue[] memory confidenceIntervals = new ConfidenceIntervalValue[](2);
-        confidenceIntervals[0] = ConfidenceIntervalValue({
-            confidenceInterval: 10000000000000000,
-            value: 123456789012345678
-        });
-        confidenceIntervals[1] = ConfidenceIntervalValue({
-            confidenceInterval: 1000000000000000000,
-            value: 1234567890123456789
-        });
+        uint256[] memory confidenceIntervals = new uint256[](2);
+        confidenceIntervals[0] = 15870000000000000000;
+        confidenceIntervals[1] = 97720000000000000000;
+
+        uint256[] memory confidenceIntervalValues = new uint256[](2);
+        confidenceIntervalValues[0] = 1000000000000000000;
+        confidenceIntervalValues[1] = 2000000000000000000;
 
         NetworkInferenceData memory networkInferenceData = NetworkInferenceData({
             networkInference: 123456789012345678,
             confidenceIntervals: confidenceIntervals,
+            confidenceIntervalValues: confidenceIntervalValues,
             topicId: 1,
             timestamp: block.timestamp - 5 minutes,
             extraData: ''

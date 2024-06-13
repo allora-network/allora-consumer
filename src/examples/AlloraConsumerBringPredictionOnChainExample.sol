@@ -4,8 +4,7 @@ pragma solidity ^0.8.13;
 import { 
   IAlloraConsumer, 
   TopicValue, 
-  AlloraConsumerNetworkInferenceData,
-  ConfidenceIntervalValue
+  AlloraConsumerNetworkInferenceData
 } from '../interface/IAlloraConsumer.sol';
 import { Ownable2Step } from "../../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
@@ -44,7 +43,8 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
         _protocolFunctionRequiringPredictionValue(
             protocolFunctionArgument, 
             topicValue.recentValue,
-            topicValue.confidenceIntervals
+            topicValue.confidenceIntervals,
+            topicValue.confidenceIntervalValues
         );
     }
 
@@ -60,20 +60,23 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
     ) external payable {
         (
             uint256 value,
-          ConfidenceIntervalValue[] memory confidenceIntervals,
+            uint256[] memory confidenceIntervals,
+            uint256[] memory confidenceIntervalValues,
         ) = IAlloraConsumer(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyNetworkInference(alloraNetworkInferenceData);
 
         _protocolFunctionRequiringPredictionValue(
             protocolFunctionArgument, 
             value,
-            confidenceIntervals
+            confidenceIntervals,
+            confidenceIntervalValues
         );
     }
 
     function _protocolFunctionRequiringPredictionValue(
         uint256 protocolFunctionArgument, 
         uint256 value,
-        ConfidenceIntervalValue[] memory confidenceIntervals
+        uint256[] memory confidenceIntervals,
+        uint256[] memory confidenceIntervalValues
     ) internal {
         // use arguments and value 
     }

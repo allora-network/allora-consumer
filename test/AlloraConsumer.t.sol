@@ -6,8 +6,7 @@ import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptograph
 import { AlloraConsumer, AlloraConsumerConstructorArgs } from "../src/AlloraConsumer.sol";
 import { 
     NetworkInferenceData, 
-    AlloraConsumerNetworkInferenceData,
-    ConfidenceIntervalValue
+    AlloraConsumerNetworkInferenceData
 } from "../src/interface/IAlloraConsumer.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
 import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
@@ -179,8 +178,8 @@ contract AlloraConsumerTest is Test {
 
         AlloraConsumerNetworkInferenceData memory alloraNd = _packageAndSignNetworkInferenceData(nd, signer0pk);
 
-        (uint256 numericValue,,) = alloraConsumer.verifyNetworkInference(alloraNd);
-        (uint256 numericValueView,,) = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
+        (uint256 numericValue,,,) = alloraConsumer.verifyNetworkInference(alloraNd);
+        (uint256 numericValueView,,,) = alloraConsumer.verifyNetworkInferenceViewOnly(alloraNd);
         assertEq(numericValue, nd.networkInference);
         assertEq(numericValue, numericValueView);
     }
@@ -237,20 +236,21 @@ contract AlloraConsumerTest is Test {
     function _dummyNetworkInferenceData() internal view returns (
         NetworkInferenceData memory
     ) {
-        ConfidenceIntervalValue[] memory confidenceIntervals = new ConfidenceIntervalValue[](2);
-        confidenceIntervals[0] = ConfidenceIntervalValue({
-            confidenceInterval: 10000000000000000,
-            value: 123456789012345678
-        });
-        confidenceIntervals[1] = ConfidenceIntervalValue({
-            confidenceInterval: 1000000000000000000,
-            value: 1234567890123456789
-        });
+        uint256[] memory confidenceIntervals = new uint256[](2);
+        confidenceIntervals[0] = 15870000000000000000;
+        confidenceIntervals[1] = 97720000000000000000;
+
+        uint256[] memory confidenceIntervalValues = new uint256[](2);
+        confidenceIntervalValues[0] = 1000000000000000000;
+        confidenceIntervalValues[1] = 2000000000000000000;
+
+
 
         return NetworkInferenceData({
             networkInference: 123456789012345678,
             topicId: 1,
             confidenceIntervals: confidenceIntervals,
+            confidenceIntervalValues: confidenceIntervalValues,
             timestamp: block.timestamp,
             extraData: ''
         });
