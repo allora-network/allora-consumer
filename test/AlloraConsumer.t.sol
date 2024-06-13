@@ -236,12 +236,21 @@ contract AlloraConsumerTest is Test {
     function _dummyNetworkInferenceData() internal view returns (
         NetworkInferenceData memory
     ) {
+        uint256[] memory confidenceIntervals = new uint256[](2);
+        confidenceIntervals[0] = 15870000000000000000;
+        confidenceIntervals[1] = 97720000000000000000;
+
+        uint256[] memory confidenceIntervalValues = new uint256[](2);
+        confidenceIntervalValues[0] = 1000000000000000000;
+        confidenceIntervalValues[1] = 2000000000000000000;
+
+
 
         return NetworkInferenceData({
             networkInference: 123456789012345678,
             topicId: 1,
-            confidenceIntervalLowerBound: 123456789012345678,
-            confidenceIntervalUpperBound: 1000000000000000000,
+            confidenceIntervals: confidenceIntervals,
+            confidenceIntervalValues: confidenceIntervalValues,
             timestamp: block.timestamp,
             extraData: ''
         });

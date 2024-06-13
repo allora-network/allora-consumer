@@ -60,8 +60,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         uint256 networkInference, 
         uint256 timestamp, 
         uint256 topicId, 
-        uint256 confidenceIntervalLowerBound,
-        uint256 confidenceIntervalUpperBound,
         bytes extraData
     );
 
@@ -81,7 +79,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     error AlloraConsumerNotSwitchedOn();
     error AlloraConsumerNoDataProvided();
     error AlloraConsumerInvalidDataTime();
-    error AlloraConsumerInvalidConfidenceInterval();
     error AlloraConsumerInvalidDataProvider();
 
     // parameter update errors
@@ -100,14 +97,14 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         AlloraConsumerNetworkInferenceData memory nd
     ) external view override returns (
         uint256 networkInference, 
-        uint256 confidenceIntervalLowerBound,
-        uint256 confidenceIntervalUpperBound,
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         (
             networkInference, 
-            confidenceIntervalLowerBound,
-            confidenceIntervalUpperBound,
+            confidenceIntervals,
+            confidenceIntervalValues,
             dataProvider
         ) = _verifyNetworkInferenceData(
             nd
@@ -119,14 +116,14 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         AlloraConsumerNetworkInferenceData memory nd
     ) external override returns (
         uint256 networkInference, 
-        uint256 confidenceIntervalLowerBound,
-        uint256 confidenceIntervalUpperBound,
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         (
             networkInference, 
-            confidenceIntervalLowerBound,
-            confidenceIntervalUpperBound,
+            confidenceIntervals, 
+            confidenceIntervalValues, 
             dataProvider
         ) = _verifyNetworkInferenceData(
             nd
@@ -135,17 +132,16 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         topicValue[nd.networkInference.topicId][nd.networkInference.extraData] = 
             TopicValue({
                 recentValue: _toUint192(networkInference),
-                recentConfidenceIntervalLowerBound: confidenceIntervalLowerBound,
-                recentConfidenceIntervalUpperBound: confidenceIntervalUpperBound,
-                recentValueTime: _toUint64(block.timestamp)
+                recentValueTime: _toUint64(block.timestamp),
+                confidenceIntervals: confidenceIntervals,
+                confidenceIntervalValues: confidenceIntervalValues
             });
+
 
         emit AlloraConsumerVerifiedNetworkInferenceDataAndInterval(
             networkInference, 
             nd.networkInference.timestamp, 
             nd.networkInference.topicId, 
-            nd.networkInference.confidenceIntervalLowerBound, 
-            nd.networkInference.confidenceIntervalUpperBound,
             nd.networkInference.extraData
         );
     }
@@ -154,8 +150,8 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         AlloraConsumerNetworkInferenceData memory nd
     ) internal view returns (
         uint256 networkInference, 
-        uint256 confidenceIntervalLowerBound,
-        uint256 confidenceIntervalUpperBound,
+        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         if (!switchedOn) {
@@ -169,11 +165,6 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
             block.timestamp + futureDataValiditySeconds < timestamp
         ) {
             revert AlloraConsumerInvalidDataTime();
-        }
-
-        if (nd.networkInference.confidenceIntervalLowerBound > 
-            nd.networkInference.confidenceIntervalUpperBound) {
-            revert AlloraConsumerInvalidConfidenceInterval();
         }
 
         dataProvider = ECDSA.recover(
@@ -190,8 +181,8 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         }
 
         networkInference = nd.networkInference.networkInference;
-        confidenceIntervalLowerBound = nd.networkInference.confidenceIntervalLowerBound;
-        confidenceIntervalUpperBound = nd.networkInference.confidenceIntervalUpperBound;
+        confidenceIntervals = nd.networkInference.confidenceIntervals;
+        confidenceIntervalValues = nd.networkInference.confidenceIntervalValues;
     }
     
 
@@ -208,8 +199,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
             networkInferenceData.networkInference,
             networkInferenceData.timestamp,
             networkInferenceData.topicId,
-            networkInferenceData.confidenceIntervalLowerBound,
-            networkInferenceData.confidenceIntervalUpperBound,
+            networkInferenceData.confidenceIntervals,
             networkInferenceData.extraData
         )));
     }
