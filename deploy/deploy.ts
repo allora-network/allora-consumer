@@ -19,7 +19,7 @@ const deploy = async () => {
 
   // const MedianAggregator = await deployer.deploy('MedianAggregator', [])
 
-  const AlloraAdapter = await deployer.deploy(
+  const AlloraConsumer = await deployer.deploy(
     'AlloraConsumer', [{ owner: ADMIN }]
   )
 }
