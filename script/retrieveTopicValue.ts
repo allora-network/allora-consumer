@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 import { AlloraAdapter__factory } from '../types/factories/AlloraAdapter__factory'
-import { AlloraAdapter } from '../types/AlloraAdapter'
+import { AlloraAdapter } from '../types/AlloraConsumer'
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
 import sepoliaAddresses from '../deploy/deployments/sepolia.json'
