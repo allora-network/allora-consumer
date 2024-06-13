@@ -3,6 +3,9 @@ cache/
 out/
 node_modules/
 
+# Coverage
+coverage/
+
 # Gas snapshot
 .gas-snapshot
 
