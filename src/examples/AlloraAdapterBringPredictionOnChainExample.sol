@@ -36,7 +36,12 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
             revert('AlloraConsumerBringPredictionOnChainExample: stale value');
         }
 
-        _protocolFunctionRequiringPredictionValue(protocolFunctionArgument, topicValue.recentValue);
+        _protocolFunctionRequiringPredictionValue(
+            protocolFunctionArgument, 
+            topicValue.recentValue,
+            topicValue.recentConfidenceIntervalLowerBound,
+            topicValue.recentConfidenceIntervalUpperBound
+        );
     }
 
     /**
