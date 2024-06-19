@@ -31,9 +31,9 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     /// @dev The valid data providers
     mapping(address dataProvider => bool) public validDataProvider;
 
-    /// @dev The typehash for the numeric data
-    bytes32 public constant NUMERIC_DATA_TYPEHASH = keccak256(
-        "NumericData(uint256 topicId,uint256 timestamp,bytes extraData,uint256[] numericValues)"
+    /// @dev The typehash for the network inference
+    bytes32 public constant NETWORK_INFERENCE_DATA_TYPEHASH = keccak256(
+        "NetworkInferenceData(uint256 networkInference,uint256 timestamp,uint256 topicId,bytes extraData,uint256[] confidenceIntervals,uint256[] confidenceIntervalValues)"
     );
 
     /// @dev The number of seconds a timestamp can be in the past and still be valid
@@ -195,12 +195,13 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         NetworkInferenceData memory networkInferenceData
     ) public view override returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
-            NUMERIC_DATA_TYPEHASH,
+            NETWORK_INFERENCE_DATA_TYPEHASH,
             networkInferenceData.networkInference,
             networkInferenceData.timestamp,
             networkInferenceData.topicId,
+            networkInferenceData.extraData,
             networkInferenceData.confidenceIntervals,
-            networkInferenceData.extraData
+            networkInferenceData.confidenceIntervalValues
         )));
     }
 

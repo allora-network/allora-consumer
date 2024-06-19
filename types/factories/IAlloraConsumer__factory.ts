@@ -24,22 +24,22 @@ const _abi = [
             internalType: "uint256",
           },
           {
+            name: "confidenceIntervals",
+            type: "uint256[]",
+            internalType: "uint256[]",
+          },
+          {
+            name: "confidenceIntervalValues",
+            type: "uint256[]",
+            internalType: "uint256[]",
+          },
+          {
             name: "timestamp",
             type: "uint256",
             internalType: "uint256",
           },
           {
             name: "topicId",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "confidenceIntervalLowerBound",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "confidenceIntervalUpperBound",
             type: "uint256",
             internalType: "uint256",
           },
@@ -77,7 +77,7 @@ const _abi = [
     ],
     outputs: [
       {
-        name: "",
+        name: "topicValue",
         type: "tuple",
         internalType: "struct TopicValue",
         components: [
@@ -92,14 +92,14 @@ const _abi = [
             internalType: "uint64",
           },
           {
-            name: "recentConfidenceIntervalLowerBound",
-            type: "uint256",
-            internalType: "uint256",
+            name: "confidenceIntervals",
+            type: "uint256[]",
+            internalType: "uint256[]",
           },
           {
-            name: "recentConfidenceIntervalUpperBound",
-            type: "uint256",
-            internalType: "uint256",
+            name: "confidenceIntervalValues",
+            type: "uint256[]",
+            internalType: "uint256[]",
           },
         ],
       },
@@ -131,22 +131,22 @@ const _abi = [
                 internalType: "uint256",
               },
               {
+                name: "confidenceIntervals",
+                type: "uint256[]",
+                internalType: "uint256[]",
+              },
+              {
+                name: "confidenceIntervalValues",
+                type: "uint256[]",
+                internalType: "uint256[]",
+              },
+              {
                 name: "timestamp",
                 type: "uint256",
                 internalType: "uint256",
               },
               {
                 name: "topicId",
-                type: "uint256",
-                internalType: "uint256",
-              },
-              {
-                name: "confidenceIntervalLowerBound",
-                type: "uint256",
-                internalType: "uint256",
-              },
-              {
-                name: "confidenceIntervalUpperBound",
                 type: "uint256",
                 internalType: "uint256",
               },
@@ -172,17 +172,17 @@ const _abi = [
         internalType: "uint256",
       },
       {
-        name: "confidenceIntervalLowerBound",
-        type: "uint256",
-        internalType: "uint256",
+        name: "confidenceIntervals",
+        type: "uint256[]",
+        internalType: "uint256[]",
       },
       {
-        name: "confidenceIntervalUpperBound",
-        type: "uint256",
-        internalType: "uint256",
+        name: "confidenceIntervalValues",
+        type: "uint256[]",
+        internalType: "uint256[]",
       },
       {
-        name: "aggregator",
+        name: "dataProvider",
         type: "address",
         internalType: "address",
       },
@@ -214,22 +214,22 @@ const _abi = [
                 internalType: "uint256",
               },
               {
+                name: "confidenceIntervals",
+                type: "uint256[]",
+                internalType: "uint256[]",
+              },
+              {
+                name: "confidenceIntervalValues",
+                type: "uint256[]",
+                internalType: "uint256[]",
+              },
+              {
                 name: "timestamp",
                 type: "uint256",
                 internalType: "uint256",
               },
               {
                 name: "topicId",
-                type: "uint256",
-                internalType: "uint256",
-              },
-              {
-                name: "confidenceIntervalLowerBound",
-                type: "uint256",
-                internalType: "uint256",
-              },
-              {
-                name: "confidenceIntervalUpperBound",
                 type: "uint256",
                 internalType: "uint256",
               },
@@ -255,14 +255,14 @@ const _abi = [
         internalType: "uint256",
       },
       {
-        name: "confidenceIntervalLowerBound",
-        type: "uint256",
-        internalType: "uint256",
+        name: "confidenceIntervals",
+        type: "uint256[]",
+        internalType: "uint256[]",
       },
       {
-        name: "confidenceIntervalUpperBound",
-        type: "uint256",
-        internalType: "uint256",
+        name: "confidenceIntervalValues",
+        type: "uint256[]",
+        internalType: "uint256[]",
       },
       {
         name: "dataProvider",

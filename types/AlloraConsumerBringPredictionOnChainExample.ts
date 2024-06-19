@@ -25,26 +25,26 @@ import type {
 
 export type NetworkInferenceDataStruct = {
   networkInference: BigNumberish;
+  confidenceIntervals: BigNumberish[];
+  confidenceIntervalValues: BigNumberish[];
   timestamp: BigNumberish;
   topicId: BigNumberish;
-  confidenceIntervalLowerBound: BigNumberish;
-  confidenceIntervalUpperBound: BigNumberish;
   extraData: BytesLike;
 };
 
 export type NetworkInferenceDataStructOutput = [
   networkInference: bigint,
+  confidenceIntervals: bigint[],
+  confidenceIntervalValues: bigint[],
   timestamp: bigint,
   topicId: bigint,
-  confidenceIntervalLowerBound: bigint,
-  confidenceIntervalUpperBound: bigint,
   extraData: string
 ] & {
   networkInference: bigint;
+  confidenceIntervals: bigint[];
+  confidenceIntervalValues: bigint[];
   timestamp: bigint;
   topicId: bigint;
-  confidenceIntervalLowerBound: bigint;
-  confidenceIntervalUpperBound: bigint;
   extraData: string;
 };
 
