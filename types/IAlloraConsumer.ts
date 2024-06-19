@@ -22,46 +22,46 @@ import type {
 
 export type NetworkInferenceDataStruct = {
   networkInference: BigNumberish;
+  confidenceIntervals: BigNumberish[];
+  confidenceIntervalValues: BigNumberish[];
   timestamp: BigNumberish;
   topicId: BigNumberish;
-  confidenceIntervalLowerBound: BigNumberish;
-  confidenceIntervalUpperBound: BigNumberish;
   extraData: BytesLike;
 };
 
 export type NetworkInferenceDataStructOutput = [
   networkInference: bigint,
+  confidenceIntervals: bigint[],
+  confidenceIntervalValues: bigint[],
   timestamp: bigint,
   topicId: bigint,
-  confidenceIntervalLowerBound: bigint,
-  confidenceIntervalUpperBound: bigint,
   extraData: string
 ] & {
   networkInference: bigint;
+  confidenceIntervals: bigint[];
+  confidenceIntervalValues: bigint[];
   timestamp: bigint;
   topicId: bigint;
-  confidenceIntervalLowerBound: bigint;
-  confidenceIntervalUpperBound: bigint;
   extraData: string;
 };
 
 export type TopicValueStruct = {
   recentValue: BigNumberish;
   recentValueTime: BigNumberish;
-  recentConfidenceIntervalLowerBound: BigNumberish;
-  recentConfidenceIntervalUpperBound: BigNumberish;
+  confidenceIntervals: BigNumberish[];
+  confidenceIntervalValues: BigNumberish[];
 };
 
 export type TopicValueStructOutput = [
   recentValue: bigint,
   recentValueTime: bigint,
-  recentConfidenceIntervalLowerBound: bigint,
-  recentConfidenceIntervalUpperBound: bigint
+  confidenceIntervals: bigint[],
+  confidenceIntervalValues: bigint[]
 ] & {
   recentValue: bigint;
   recentValueTime: bigint;
-  recentConfidenceIntervalLowerBound: bigint;
-  recentConfidenceIntervalUpperBound: bigint;
+  confidenceIntervals: bigint[];
+  confidenceIntervalValues: bigint[];
 };
 
 export type AlloraConsumerNetworkInferenceDataStruct = {
@@ -182,11 +182,11 @@ export interface IAlloraConsumer extends BaseContract {
   verifyNetworkInference: TypedContractMethod<
     [nd: AlloraConsumerNetworkInferenceDataStruct],
     [
-      [bigint, bigint, bigint, string] & {
+      [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervalLowerBound: bigint;
-        confidenceIntervalUpperBound: bigint;
-        aggregator: string;
+        confidenceIntervals: bigint[];
+        confidenceIntervalValues: bigint[];
+        dataProvider: string;
       }
     ],
     "nonpayable"
@@ -195,10 +195,10 @@ export interface IAlloraConsumer extends BaseContract {
   verifyNetworkInferenceViewOnly: TypedContractMethod<
     [nd: AlloraConsumerNetworkInferenceDataStruct],
     [
-      [bigint, bigint, bigint, string] & {
+      [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervalLowerBound: bigint;
-        confidenceIntervalUpperBound: bigint;
+        confidenceIntervals: bigint[];
+        confidenceIntervalValues: bigint[];
         dataProvider: string;
       }
     ],
@@ -228,11 +228,11 @@ export interface IAlloraConsumer extends BaseContract {
   ): TypedContractMethod<
     [nd: AlloraConsumerNetworkInferenceDataStruct],
     [
-      [bigint, bigint, bigint, string] & {
+      [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervalLowerBound: bigint;
-        confidenceIntervalUpperBound: bigint;
-        aggregator: string;
+        confidenceIntervals: bigint[];
+        confidenceIntervalValues: bigint[];
+        dataProvider: string;
       }
     ],
     "nonpayable"
@@ -242,10 +242,10 @@ export interface IAlloraConsumer extends BaseContract {
   ): TypedContractMethod<
     [nd: AlloraConsumerNetworkInferenceDataStruct],
     [
-      [bigint, bigint, bigint, string] & {
+      [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervalLowerBound: bigint;
-        confidenceIntervalUpperBound: bigint;
+        confidenceIntervals: bigint[];
+        confidenceIntervalValues: bigint[];
         dataProvider: string;
       }
     ],

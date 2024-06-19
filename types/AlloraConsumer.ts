@@ -31,46 +31,46 @@ export type AlloraConsumerConstructorArgsStructOutput = [owner: string] & {
 
 export type NetworkInferenceDataStruct = {
   networkInference: BigNumberish;
+  confidenceIntervals: BigNumberish[];
+  confidenceIntervalValues: BigNumberish[];
   timestamp: BigNumberish;
   topicId: BigNumberish;
-  confidenceIntervalLowerBound: BigNumberish;
-  confidenceIntervalUpperBound: BigNumberish;
   extraData: BytesLike;
 };
 
 export type NetworkInferenceDataStructOutput = [
   networkInference: bigint,
+  confidenceIntervals: bigint[],
+  confidenceIntervalValues: bigint[],
   timestamp: bigint,
   topicId: bigint,
-  confidenceIntervalLowerBound: bigint,
-  confidenceIntervalUpperBound: bigint,
   extraData: string
 ] & {
   networkInference: bigint;
+  confidenceIntervals: bigint[];
+  confidenceIntervalValues: bigint[];
   timestamp: bigint;
   topicId: bigint;
-  confidenceIntervalLowerBound: bigint;
-  confidenceIntervalUpperBound: bigint;
   extraData: string;
 };
 
 export type TopicValueStruct = {
   recentValue: BigNumberish;
   recentValueTime: BigNumberish;
-  recentConfidenceIntervalLowerBound: BigNumberish;
-  recentConfidenceIntervalUpperBound: BigNumberish;
+  confidenceIntervals: BigNumberish[];
+  confidenceIntervalValues: BigNumberish[];
 };
 
 export type TopicValueStructOutput = [
   recentValue: bigint,
   recentValueTime: bigint,
-  recentConfidenceIntervalLowerBound: bigint,
-  recentConfidenceIntervalUpperBound: bigint
+  confidenceIntervals: bigint[],
+  confidenceIntervalValues: bigint[]
 ] & {
   recentValue: bigint;
   recentValueTime: bigint;
-  recentConfidenceIntervalLowerBound: bigint;
-  recentConfidenceIntervalUpperBound: bigint;
+  confidenceIntervals: bigint[];
+  confidenceIntervalValues: bigint[];
 };
 
 export type AlloraConsumerNetworkInferenceDataStruct = {
@@ -92,7 +92,7 @@ export type AlloraConsumerNetworkInferenceDataStructOutput = [
 export interface AlloraConsumerInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "NUMERIC_DATA_TYPEHASH"
+      | "NETWORK_INFERENCE_DATA_TYPEHASH"
       | "acceptOwnership"
       | "addDataProvider"
       | "eip712Domain"
@@ -133,7 +133,7 @@ export interface AlloraConsumerInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(
-    functionFragment: "NUMERIC_DATA_TYPEHASH",
+    functionFragment: "NETWORK_INFERENCE_DATA_TYPEHASH",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -219,7 +219,7 @@ export interface AlloraConsumerInterface extends Interface {
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "NUMERIC_DATA_TYPEHASH",
+    functionFragment: "NETWORK_INFERENCE_DATA_TYPEHASH",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -422,24 +422,18 @@ export namespace AlloraConsumerVerifiedNetworkInferenceDataAndIntervalEvent {
     networkInference: BigNumberish,
     timestamp: BigNumberish,
     topicId: BigNumberish,
-    confidenceIntervalLowerBound: BigNumberish,
-    confidenceIntervalUpperBound: BigNumberish,
     extraData: BytesLike
   ];
   export type OutputTuple = [
     networkInference: bigint,
     timestamp: bigint,
     topicId: bigint,
-    confidenceIntervalLowerBound: bigint,
-    confidenceIntervalUpperBound: bigint,
     extraData: string
   ];
   export interface OutputObject {
     networkInference: bigint;
     timestamp: bigint;
     topicId: bigint;
-    confidenceIntervalLowerBound: bigint;
-    confidenceIntervalUpperBound: bigint;
     extraData: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -527,7 +521,7 @@ export interface AlloraConsumer extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  NUMERIC_DATA_TYPEHASH: TypedContractMethod<[], [string], "view">;
+  NETWORK_INFERENCE_DATA_TYPEHASH: TypedContractMethod<[], [string], "view">;
 
   acceptOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -585,14 +579,7 @@ export interface AlloraConsumer extends BaseContract {
 
   topicValue: TypedContractMethod<
     [topicId: BigNumberish, extraData: BytesLike],
-    [
-      [bigint, bigint, bigint, bigint] & {
-        recentValue: bigint;
-        recentValueTime: bigint;
-        recentConfidenceIntervalLowerBound: bigint;
-        recentConfidenceIntervalUpperBound: bigint;
-      }
-    ],
+    [[bigint, bigint] & { recentValue: bigint; recentValueTime: bigint }],
     "view"
   >;
 
@@ -627,10 +614,10 @@ export interface AlloraConsumer extends BaseContract {
   verifyNetworkInference: TypedContractMethod<
     [nd: AlloraConsumerNetworkInferenceDataStruct],
     [
-      [bigint, bigint, bigint, string] & {
+      [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervalLowerBound: bigint;
-        confidenceIntervalUpperBound: bigint;
+        confidenceIntervals: bigint[];
+        confidenceIntervalValues: bigint[];
         dataProvider: string;
       }
     ],
@@ -640,10 +627,10 @@ export interface AlloraConsumer extends BaseContract {
   verifyNetworkInferenceViewOnly: TypedContractMethod<
     [nd: AlloraConsumerNetworkInferenceDataStruct],
     [
-      [bigint, bigint, bigint, string] & {
+      [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervalLowerBound: bigint;
-        confidenceIntervalUpperBound: bigint;
+        confidenceIntervals: bigint[];
+        confidenceIntervalValues: bigint[];
         dataProvider: string;
       }
     ],
@@ -655,7 +642,7 @@ export interface AlloraConsumer extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "NUMERIC_DATA_TYPEHASH"
+    nameOrSignature: "NETWORK_INFERENCE_DATA_TYPEHASH"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "acceptOwnership"
@@ -719,14 +706,7 @@ export interface AlloraConsumer extends BaseContract {
     nameOrSignature: "topicValue"
   ): TypedContractMethod<
     [topicId: BigNumberish, extraData: BytesLike],
-    [
-      [bigint, bigint, bigint, bigint] & {
-        recentValue: bigint;
-        recentValueTime: bigint;
-        recentConfidenceIntervalLowerBound: bigint;
-        recentConfidenceIntervalUpperBound: bigint;
-      }
-    ],
+    [[bigint, bigint] & { recentValue: bigint; recentValueTime: bigint }],
     "view"
   >;
   getFunction(
@@ -760,10 +740,10 @@ export interface AlloraConsumer extends BaseContract {
   ): TypedContractMethod<
     [nd: AlloraConsumerNetworkInferenceDataStruct],
     [
-      [bigint, bigint, bigint, string] & {
+      [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervalLowerBound: bigint;
-        confidenceIntervalUpperBound: bigint;
+        confidenceIntervals: bigint[];
+        confidenceIntervalValues: bigint[];
         dataProvider: string;
       }
     ],
@@ -774,10 +754,10 @@ export interface AlloraConsumer extends BaseContract {
   ): TypedContractMethod<
     [nd: AlloraConsumerNetworkInferenceDataStruct],
     [
-      [bigint, bigint, bigint, string] & {
+      [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervalLowerBound: bigint;
-        confidenceIntervalUpperBound: bigint;
+        confidenceIntervals: bigint[];
+        confidenceIntervalValues: bigint[];
         dataProvider: string;
       }
     ],
@@ -958,7 +938,7 @@ export interface AlloraConsumer extends BaseContract {
       AlloraConsumerVerifiedNetworkInferenceDataEvent.OutputObject
     >;
 
-    "AlloraConsumerVerifiedNetworkInferenceDataAndInterval(uint256,uint256,uint256,uint256,uint256,bytes)": TypedContractEvent<
+    "AlloraConsumerVerifiedNetworkInferenceDataAndInterval(uint256,uint256,uint256,bytes)": TypedContractEvent<
       AlloraConsumerVerifiedNetworkInferenceDataAndIntervalEvent.InputTuple,
       AlloraConsumerVerifiedNetworkInferenceDataAndIntervalEvent.OutputTuple,
       AlloraConsumerVerifiedNetworkInferenceDataAndIntervalEvent.OutputObject

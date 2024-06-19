@@ -9,15 +9,15 @@ import * as dotenv from 'dotenv';
 
 const ALLORA_CONSUMER_NAME = 'AlloraConsumer'
 const ALLORA_CONSUMER_VERSION = 1
-const ALLORA_CONSUMER_ADDRESS = '0xBEd9F9B7509288fCfe4d49F761C625C832e6264A'
+const ALLORA_CONSUMER_ADDRESS = '0x5360229031C64a2deBb94a0886350B52a4c2F659'
 const ALLORA_CONSUMER_CHAIN_ID = 11155111
 
 type NetworkInferenceDataStruct = {
-  topicId: BigNumberish
-  timestamp: BigNumberish
   networkInference: BigNumberish
-  confidenceIntervalLowerBound: BigNumberish
-  confidenceIntervalUpperBound: BigNumberish
+  confidenceIntervals: BigNumberish[]
+  confidenceIntervalValues: BigNumberish[]
+  timestamp: BigNumberish
+  topicId: BigNumberish
   extraData: BytesLike
 };
 
@@ -45,7 +45,7 @@ const constructMessageLocally = async (
 
   const { chainId, alloraConsumerAddress } = config
 
-  const numericDataTypehash = keccak(toBytes('NumericData(uint256 topicId,uint256 timestamp,bytes extraData,uint256[] numericValues)'))
+  const networkInferenceTypehash = keccak(toBytes("NetworkInferenceData(uint256 networkInference,uint256 timestamp,uint256 topicId,bytes extraData,uint256[] confidenceIntervals,uint256[] confidenceIntervalValues)"))
 
   const domainSeparator = keccak(coder.encode(
     ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
@@ -59,15 +59,15 @@ const constructMessageLocally = async (
   ))
 
   const intermediateHash = keccak(coder.encode(
-    ['bytes32', 'uint256', 'uint256', 'bytes', 'bytes'],
+    ['bytes32', 'uint256', 'uint256', 'uint256', 'bytes', 'uint256[]', 'uint256[]'],
     [
-      numericDataTypehash,
+      networkInferenceTypehash,
       networkInference.networkInference,
       networkInference.timestamp, 
       networkInference.topicId, 
-      networkInference.confidenceIntervalLowerBound,
-      networkInference.confidenceIntervalUpperBound,
       networkInference.extraData,
+      networkInference.confidenceIntervals,
+      networkInference.confidenceIntervalValues,
     ]
   ))
 
@@ -84,17 +84,18 @@ const signMessageLocally = async (
   config: {
     chainId: number
     alloraConsumerAddress: string
-    privateKey: string
+    signerPrivateKey: string
   }
 ) => {
-  const { chainId, alloraConsumerAddress, privateKey } = config
-  const wallet = new ethers.Wallet(privateKey)
+  const { chainId, alloraConsumerAddress, signerPrivateKey } = config
+  const wallet = new ethers.Wallet(signerPrivateKey)
 
-  const message = await constructMessageLocally(
+  const localMessage = await constructMessageLocally(
     numericData, 
     { chainId, alloraConsumerAddress }
   )
-  const messageBytes = hexStringToByteArray(message)
+  console.log({localMessage})
+  const messageBytes = hexStringToByteArray(localMessage)
 
   return await wallet.signMessage(messageBytes)
 }
@@ -102,35 +103,43 @@ const signMessageLocally = async (
 const run = async () => {
   dotenv.config()
 
-  const privateKey = getEnvVariable('privateKey')
+
+  const signerPrivateKey = getEnvVariable('backendSignerPrivateKey')
+  const senderPrivateKey = getEnvVariable('privateKey')
+
   const rpcUrl = getEnvVariable('rpcUrl')
-
   const provider = new ethers.JsonRpcProvider(rpcUrl)
-  const wallet = new ethers.Wallet(privateKey, provider)
 
-  const alloraConsumer = (new AlloraConsumer__factory()).attach(ALLORA_CONSUMER_ADDRESS).connect(wallet) as AlloraConsumer
+  const signerWallet = new ethers.Wallet(signerPrivateKey, provider)
+  const senderWallet = new ethers.Wallet(senderPrivateKey, provider)
+
+  console.log({privateKey: signerPrivateKey})
+  console.log({walletAddress: signerWallet.address})
+
+  const alloraConsumer = (new AlloraConsumer__factory()).attach(ALLORA_CONSUMER_ADDRESS).connect(senderWallet) as AlloraConsumer
 
   const networkInferenceData: NetworkInferenceDataStruct = {
     topicId: 1,
-    timestamp: Math.floor(Date.now() / 1000) - (60 * 5),
+    timestamp: 1718762000,
     extraData: ethers.toUtf8Bytes(''),
-    networkInference:             '123456789012345678',
-    confidenceIntervalLowerBound: '10000000000000000',
-    confidenceIntervalUpperBound: '1000000000000000000',
+    networkInference: '123000000000000000000',
+    confidenceIntervals: ['456000000000000000000'],
+    confidenceIntervalValues: ['789000000000000000000'],
   }
 
   console.info('verifying networkInferenceData')
   console.info({networkInferenceData})
 
-  const message = await alloraConsumer.getNetworkInferenceMessage(networkInferenceData)
-  const messageBytes = hexStringToByteArray(message)
+  const messageFromRemoteContract = await alloraConsumer.getNetworkInferenceMessage(networkInferenceData)
+  console.log({messageFromRemoteContract})
+  const messageBytes = hexStringToByteArray(messageFromRemoteContract)
 
   // sign the message with the private key
-  const signature = await wallet.signMessage(messageBytes)
+  const signature = await signerWallet.signMessage(messageBytes)
   const localSignature = await signMessageLocally(networkInferenceData, { 
     chainId: ALLORA_CONSUMER_CHAIN_ID,
     alloraConsumerAddress: ALLORA_CONSUMER_ADDRESS, 
-    privateKey 
+    signerPrivateKey: signerPrivateKey 
   })
 
   console.log({signature, localSignature})
@@ -140,10 +149,11 @@ const run = async () => {
   }
 
   const tx = await alloraConsumer.verifyNetworkInference({
-    networkInference: networkInferenceData, 
     signature: signature,
+    networkInference: networkInferenceData, 
     extraData: ethers.toUtf8Bytes(''),
   })
+
   console.info('tx hash:', tx.hash) 
   console.info('Awaiting tx confirmation...')
 
@@ -168,7 +178,7 @@ const main = async () => {
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
+  .catch(error => {
     console.error('ERROR')
     console.error(error)
     process.exit(1)

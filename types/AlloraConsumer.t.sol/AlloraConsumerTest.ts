@@ -67,6 +67,7 @@ export interface AlloraConsumerTestInterface extends Interface {
       | "test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet"
       | "test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures"
       | "test_valueIsSavedWhenCallingVerifyDataWithValidSignature"
+      | "test_verifyNetworkInferenceViewOnlyGivesCorrectResult"
       | "test_viewAndNonViewFunctionsGiveSameResult"
   ): FunctionFragment;
 
@@ -176,6 +177,10 @@ export interface AlloraConsumerTestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "test_verifyNetworkInferenceViewOnlyGivesCorrectResult",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "test_viewAndNonViewFunctionsGiveSameResult",
     values?: undefined
   ): string;
@@ -257,6 +262,10 @@ export interface AlloraConsumerTestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "test_valueIsSavedWhenCallingVerifyDataWithValidSignature",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "test_verifyNetworkInferenceViewOnlyGivesCorrectResult",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -689,6 +698,12 @@ export interface AlloraConsumerTest extends BaseContract {
     "nonpayable"
   >;
 
+  test_verifyNetworkInferenceViewOnlyGivesCorrectResult: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
   test_viewAndNonViewFunctionsGiveSameResult: TypedContractMethod<
     [],
     [void],
@@ -768,6 +783,9 @@ export interface AlloraConsumerTest extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_valueIsSavedWhenCallingVerifyDataWithValidSignature"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "test_verifyNetworkInferenceViewOnlyGivesCorrectResult"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_viewAndNonViewFunctionsGiveSameResult"
