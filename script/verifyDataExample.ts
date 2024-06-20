@@ -9,12 +9,12 @@ import * as dotenv from 'dotenv';
 
 const ALLORA_CONSUMER_NAME = 'AlloraConsumer'
 const ALLORA_CONSUMER_VERSION = 1
-const ALLORA_CONSUMER_ADDRESS = '0x5360229031C64a2deBb94a0886350B52a4c2F659'
+const ALLORA_CONSUMER_ADDRESS = '0x08f305A3449F51BFd79D7582A1630304664B1474'
 const ALLORA_CONSUMER_CHAIN_ID = 11155111
 
 type NetworkInferenceDataStruct = {
   networkInference: BigNumberish
-  confidenceIntervals: BigNumberish[]
+  confidenceIntervalPercentiles: BigNumberish[]
   confidenceIntervalValues: BigNumberish[]
   timestamp: BigNumberish
   topicId: BigNumberish
@@ -45,7 +45,7 @@ const constructMessageLocally = async (
 
   const { chainId, alloraConsumerAddress } = config
 
-  const networkInferenceTypehash = keccak(toBytes("NetworkInferenceData(uint256 networkInference,uint256 timestamp,uint256 topicId,bytes extraData,uint256[] confidenceIntervals,uint256[] confidenceIntervalValues)"))
+  const networkInferenceTypehash = keccak(toBytes("NetworkInferenceData(uint256 networkInference,uint256 timestamp,uint256 topicId,bytes extraData,uint256[] confidenceIntervalPercentiles,uint256[] confidenceIntervalValues)"))
 
   const domainSeparator = keccak(coder.encode(
     ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
@@ -66,7 +66,7 @@ const constructMessageLocally = async (
       networkInference.timestamp, 
       networkInference.topicId, 
       networkInference.extraData,
-      networkInference.confidenceIntervals,
+      networkInference.confidenceIntervalPercentiles,
       networkInference.confidenceIntervalValues,
     ]
   ))
@@ -120,10 +120,10 @@ const run = async () => {
 
   const networkInferenceData: NetworkInferenceDataStruct = {
     topicId: 1,
-    timestamp: 1718762000,
+    timestamp: Math.floor(Date.now() / 1000) - 5 * 60, // 5 minutes ago
     extraData: ethers.toUtf8Bytes(''),
     networkInference: '123000000000000000000',
-    confidenceIntervals: ['456000000000000000000'],
+    confidenceIntervalPercentiles: ['456000000000000000000'],
     confidenceIntervalValues: ['789000000000000000000'],
   }
 
