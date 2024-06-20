@@ -30,9 +30,9 @@ contract VerifyNetworkInferenceDataExample is Script {
         numericValues[0] = 123456789012345678;
 
 
-        uint256[] memory confidenceIntervals = new uint256[](2);
-        confidenceIntervals[0] = 15870000000000000000;
-        confidenceIntervals[1] = 97720000000000000000;
+        uint256[] memory confidenceIntervalPercentiles = new uint256[](2);
+        confidenceIntervalPercentiles[0] = 15870000000000000000;
+        confidenceIntervalPercentiles[1] = 97720000000000000000;
 
         uint256[] memory confidenceIntervalValues = new uint256[](2);
         confidenceIntervalValues[0] = 1000000000000000000;
@@ -40,7 +40,7 @@ contract VerifyNetworkInferenceDataExample is Script {
 
         NetworkInferenceData memory networkInferenceData = NetworkInferenceData({
             networkInference: 123456789012345678,
-            confidenceIntervals: confidenceIntervals,
+            confidenceIntervalPercentiles: confidenceIntervalPercentiles,
             confidenceIntervalValues: confidenceIntervalValues,
             topicId: 1,
             timestamp: block.timestamp - 5 minutes,

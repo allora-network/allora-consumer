@@ -33,7 +33,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
 
     /// @dev The typehash for the network inference
     bytes32 public constant NETWORK_INFERENCE_DATA_TYPEHASH = keccak256(
-        "NetworkInferenceData(uint256 networkInference,uint256 timestamp,uint256 topicId,bytes extraData,uint256[] confidenceIntervals,uint256[] confidenceIntervalValues)"
+        "NetworkInferenceData(uint256 networkInference,uint256 timestamp,uint256 topicId,bytes extraData,uint256[] confidenceIntervalPercentiles,uint256[] confidenceIntervalValues)"
     );
 
     /// @dev The number of seconds a timestamp can be in the past and still be valid
@@ -77,6 +77,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
 
     // verification errors
     error AlloraConsumerNotSwitchedOn();
+    error AlloraConsumerInvalidConfidenceIntervals();
     error AlloraConsumerNoDataProvided();
     error AlloraConsumerInvalidDataTime();
     error AlloraConsumerInvalidDataProvider();
@@ -97,13 +98,13 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         AlloraConsumerNetworkInferenceData memory nd
     ) external view override returns (
         uint256 networkInference, 
-        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalPercentiles, 
         uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         (
             networkInference, 
-            confidenceIntervals,
+            confidenceIntervalPercentiles,
             confidenceIntervalValues,
             dataProvider
         ) = _verifyNetworkInferenceData(
@@ -116,13 +117,13 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         AlloraConsumerNetworkInferenceData memory nd
     ) external override returns (
         uint256 networkInference, 
-        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalPercentiles, 
         uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         (
             networkInference, 
-            confidenceIntervals, 
+            confidenceIntervalPercentiles, 
             confidenceIntervalValues, 
             dataProvider
         ) = _verifyNetworkInferenceData(
@@ -133,7 +134,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
             TopicValue({
                 recentValue: _toUint192(networkInference),
                 recentValueTime: _toUint64(block.timestamp),
-                confidenceIntervals: confidenceIntervals,
+                confidenceIntervalPercentiles: confidenceIntervalPercentiles,
                 confidenceIntervalValues: confidenceIntervalValues
             });
 
@@ -150,12 +151,16 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         AlloraConsumerNetworkInferenceData memory nd
     ) internal view returns (
         uint256 networkInference, 
-        uint256[] memory confidenceIntervals, 
+        uint256[] memory confidenceIntervalPercentiles, 
         uint256[] memory confidenceIntervalValues, 
         address dataProvider
     ) {
         if (!switchedOn) {
             revert AlloraConsumerNotSwitchedOn();
+        }
+
+        if (nd.networkInference.confidenceIntervalPercentiles.length != nd.networkInference.confidenceIntervalValues.length) {
+            revert AlloraConsumerInvalidConfidenceIntervals();
         }
 
         uint256 timestamp = nd.networkInference.timestamp;
@@ -181,7 +186,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
         }
 
         networkInference = nd.networkInference.networkInference;
-        confidenceIntervals = nd.networkInference.confidenceIntervals;
+        confidenceIntervalPercentiles = nd.networkInference.confidenceIntervalPercentiles;
         confidenceIntervalValues = nd.networkInference.confidenceIntervalValues;
     }
     
@@ -200,7 +205,7 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
             networkInferenceData.timestamp,
             networkInferenceData.topicId,
             networkInferenceData.extraData,
-            networkInferenceData.confidenceIntervals,
+            networkInferenceData.confidenceIntervalPercentiles,
             networkInferenceData.confidenceIntervalValues
         )));
     }

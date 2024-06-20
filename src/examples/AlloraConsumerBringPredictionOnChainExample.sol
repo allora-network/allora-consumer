@@ -43,7 +43,7 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
         _protocolFunctionRequiringPredictionValue(
             protocolFunctionArgument, 
             topicValue.recentValue,
-            topicValue.confidenceIntervals,
+            topicValue.confidenceIntervalPercentiles,
             topicValue.confidenceIntervalValues
         );
     }
@@ -60,14 +60,14 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
     ) external payable {
         (
             uint256 value,
-            uint256[] memory confidenceIntervals,
+            uint256[] memory confidenceIntervalPercentiles,
             uint256[] memory confidenceIntervalValues,
         ) = IAlloraConsumer(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyNetworkInference(alloraNetworkInferenceData);
 
         _protocolFunctionRequiringPredictionValue(
             protocolFunctionArgument, 
             value,
-            confidenceIntervals,
+            confidenceIntervalPercentiles,
             confidenceIntervalValues
         );
     }
@@ -75,7 +75,7 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
     function _protocolFunctionRequiringPredictionValue(
         uint256 protocolFunctionArgument, 
         uint256 value,
-        uint256[] memory confidenceIntervals,
+        uint256[] memory confidenceIntervalPercentiles,
         uint256[] memory confidenceIntervalValues
     ) internal {
         // use arguments and value 

@@ -68,6 +68,28 @@ contract AlloraConsumerTest is Test {
         alloraConsumer.verifyNetworkInference(nd);
     }
 
+    function test_cantCallVerifyWithMismatchedConfidenceIntervalLengths() public {
+        uint256[] memory confidenceIntervalPercentiles = new uint256[](1);
+        confidenceIntervalPercentiles[0] = 15870000000000000000;
+
+        uint256[] memory confidenceIntervalValues = new uint256[](2);
+        confidenceIntervalValues[0] = 1000000000000000000;
+        confidenceIntervalValues[1] = 2000000000000000000;
+
+        NetworkInferenceData memory nd = NetworkInferenceData({
+            networkInference: 123456789012345678,
+            topicId: 1,
+            confidenceIntervalPercentiles: confidenceIntervalPercentiles,
+            confidenceIntervalValues: confidenceIntervalValues,
+            timestamp: block.timestamp,
+            extraData: ''
+        });
+        
+        AlloraConsumerNetworkInferenceData memory and = _packageAndSignNetworkInferenceData(nd, signer0pk);
+        vm.expectRevert(abi.encodeWithSignature("AlloraConsumerInvalidConfidenceIntervals()"));
+        alloraConsumer.verifyNetworkInference(and);
+    }
+
     function test_canCallVerifyDataWithValidSignature() public {
         vm.startPrank(admin);
         alloraConsumer.addDataProvider(signer0);
@@ -236,20 +258,18 @@ contract AlloraConsumerTest is Test {
     function _dummyNetworkInferenceData() internal view returns (
         NetworkInferenceData memory
     ) {
-        uint256[] memory confidenceIntervals = new uint256[](2);
-        confidenceIntervals[0] = 15870000000000000000;
-        confidenceIntervals[1] = 97720000000000000000;
+        uint256[] memory confidenceIntervalPercentiles = new uint256[](2);
+        confidenceIntervalPercentiles[0] = 15870000000000000000;
+        confidenceIntervalPercentiles[1] = 97720000000000000000;
 
         uint256[] memory confidenceIntervalValues = new uint256[](2);
         confidenceIntervalValues[0] = 1000000000000000000;
         confidenceIntervalValues[1] = 2000000000000000000;
 
-
-
         return NetworkInferenceData({
             networkInference: 123456789012345678,
             topicId: 1,
-            confidenceIntervals: confidenceIntervals,
+            confidenceIntervalPercentiles: confidenceIntervalPercentiles,
             confidenceIntervalValues: confidenceIntervalValues,
             timestamp: block.timestamp,
             extraData: ''
