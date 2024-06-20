@@ -54,7 +54,7 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
      * @param protocolFunctionArgument An argument for the protocol function
      * @param alloraNetworkInferenceData The signed data from the Allora Consumer
      */
-    function callProtocolFunctionWithAlloraConsumerPredictionValue(
+    function callProtocolFunctionWithAlloraTopicInference(
         uint256 protocolFunctionArgument,
         AlloraConsumerNetworkInferenceData calldata alloraNetworkInferenceData
     ) external payable {
