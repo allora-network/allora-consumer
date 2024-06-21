@@ -24,7 +24,7 @@ const _abi = [
             internalType: "uint256",
           },
           {
-            name: "confidenceIntervals",
+            name: "confidenceIntervalPercentiles",
             type: "uint256[]",
             internalType: "uint256[]",
           },
@@ -92,7 +92,7 @@ const _abi = [
             internalType: "uint64",
           },
           {
-            name: "confidenceIntervals",
+            name: "confidenceIntervalPercentiles",
             type: "uint256[]",
             internalType: "uint256[]",
           },
@@ -131,7 +131,7 @@ const _abi = [
                 internalType: "uint256",
               },
               {
-                name: "confidenceIntervals",
+                name: "confidenceIntervalPercentiles",
                 type: "uint256[]",
                 internalType: "uint256[]",
               },
@@ -172,7 +172,7 @@ const _abi = [
         internalType: "uint256",
       },
       {
-        name: "confidenceIntervals",
+        name: "confidenceIntervalPercentiles",
         type: "uint256[]",
         internalType: "uint256[]",
       },
@@ -214,7 +214,7 @@ const _abi = [
                 internalType: "uint256",
               },
               {
-                name: "confidenceIntervals",
+                name: "confidenceIntervalPercentiles",
                 type: "uint256[]",
                 internalType: "uint256[]",
               },
@@ -255,7 +255,7 @@ const _abi = [
         internalType: "uint256",
       },
       {
-        name: "confidenceIntervals",
+        name: "confidenceIntervalPercentiles",
         type: "uint256[]",
         internalType: "uint256[]",
       },

@@ -22,7 +22,7 @@ import type {
 
 export type NetworkInferenceDataStruct = {
   networkInference: BigNumberish;
-  confidenceIntervals: BigNumberish[];
+  confidenceIntervalPercentiles: BigNumberish[];
   confidenceIntervalValues: BigNumberish[];
   timestamp: BigNumberish;
   topicId: BigNumberish;
@@ -31,14 +31,14 @@ export type NetworkInferenceDataStruct = {
 
 export type NetworkInferenceDataStructOutput = [
   networkInference: bigint,
-  confidenceIntervals: bigint[],
+  confidenceIntervalPercentiles: bigint[],
   confidenceIntervalValues: bigint[],
   timestamp: bigint,
   topicId: bigint,
   extraData: string
 ] & {
   networkInference: bigint;
-  confidenceIntervals: bigint[];
+  confidenceIntervalPercentiles: bigint[];
   confidenceIntervalValues: bigint[];
   timestamp: bigint;
   topicId: bigint;
@@ -48,19 +48,19 @@ export type NetworkInferenceDataStructOutput = [
 export type TopicValueStruct = {
   recentValue: BigNumberish;
   recentValueTime: BigNumberish;
-  confidenceIntervals: BigNumberish[];
+  confidenceIntervalPercentiles: BigNumberish[];
   confidenceIntervalValues: BigNumberish[];
 };
 
 export type TopicValueStructOutput = [
   recentValue: bigint,
   recentValueTime: bigint,
-  confidenceIntervals: bigint[],
+  confidenceIntervalPercentiles: bigint[],
   confidenceIntervalValues: bigint[]
 ] & {
   recentValue: bigint;
   recentValueTime: bigint;
-  confidenceIntervals: bigint[];
+  confidenceIntervalPercentiles: bigint[];
   confidenceIntervalValues: bigint[];
 };
 
@@ -184,7 +184,7 @@ export interface IAlloraConsumer extends BaseContract {
     [
       [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervals: bigint[];
+        confidenceIntervalPercentiles: bigint[];
         confidenceIntervalValues: bigint[];
         dataProvider: string;
       }
@@ -197,7 +197,7 @@ export interface IAlloraConsumer extends BaseContract {
     [
       [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervals: bigint[];
+        confidenceIntervalPercentiles: bigint[];
         confidenceIntervalValues: bigint[];
         dataProvider: string;
       }
@@ -230,7 +230,7 @@ export interface IAlloraConsumer extends BaseContract {
     [
       [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervals: bigint[];
+        confidenceIntervalPercentiles: bigint[];
         confidenceIntervalValues: bigint[];
         dataProvider: string;
       }
@@ -244,7 +244,7 @@ export interface IAlloraConsumer extends BaseContract {
     [
       [bigint, bigint[], bigint[], string] & {
         networkInference: bigint;
-        confidenceIntervals: bigint[];
+        confidenceIntervalPercentiles: bigint[];
         confidenceIntervalValues: bigint[];
         dataProvider: string;
       }

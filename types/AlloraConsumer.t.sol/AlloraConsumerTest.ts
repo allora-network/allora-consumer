@@ -64,6 +64,7 @@ export interface AlloraConsumerTestInterface extends Interface {
       | "test_cantCallVerifyDataWithExpiredTime"
       | "test_cantCallVerifyDataWithInvalidDataProvider"
       | "test_cantCallVerifyDataWithTimeTooFarIntoTheFuture"
+      | "test_cantCallVerifyWithMismatchedConfidenceIntervalLengths"
       | "test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet"
       | "test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures"
       | "test_valueIsSavedWhenCallingVerifyDataWithValidSignature"
@@ -164,6 +165,10 @@ export interface AlloraConsumerTestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "test_cantCallVerifyWithMismatchedConfidenceIntervalLengths",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet",
     values?: undefined
   ): string;
@@ -245,6 +250,10 @@ export interface AlloraConsumerTestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "test_cantCallVerifyDataWithTimeTooFarIntoTheFuture",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "test_cantCallVerifyWithMismatchedConfidenceIntervalLengths",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -671,6 +680,12 @@ export interface AlloraConsumerTest extends BaseContract {
     "nonpayable"
   >;
 
+  test_cantCallVerifyWithMismatchedConfidenceIntervalLengths: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
   test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet: TypedContractMethod<
     [],
     [void],
@@ -759,6 +774,9 @@ export interface AlloraConsumerTest extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_cantCallVerifyDataWithTimeTooFarIntoTheFuture"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "test_cantCallVerifyWithMismatchedConfidenceIntervalLengths"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet"
