@@ -24,8 +24,8 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
     // ***************************************************************
 
     /**
-     * @notice Example for calling a protocol function with using an inedex value already stored on the
-     *   Allora Consumer, only if the value is not stale
+     * @notice Example for calling a protocol function with using an inference and confidence 
+     *   intervals already stored on the Allora Consumer, only if the value is not stale.
      * 
      * @param protocolFunctionArgument An argument for the protocol function
      * @param topicId The id of the topic to use the most recent stored value for
@@ -49,7 +49,7 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
     }
 
     /**
-     * @notice Example for calling a protocol function with a prediction value from the Allora Consumer
+     * @notice Example for calling a protocol function with an inference value from the Allora Consumer
      * 
      * @param protocolFunctionArgument An argument for the protocol function
      * @param alloraNetworkInferenceData The signed data from the Allora Consumer

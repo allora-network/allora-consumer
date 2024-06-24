@@ -70,7 +70,7 @@ export interface AlloraConsumerBringPredictionOnChainExampleInterface
     nameOrSignature:
       | "acceptOwnership"
       | "alloraConsumer"
-      | "callProtocolFunctionWithAlloraConsumerPredictionValue"
+      | "callProtocolFunctionWithAlloraTopicInference"
       | "callProtocolFunctionWithExistingValue"
       | "owner"
       | "pendingOwner"
@@ -92,7 +92,7 @@ export interface AlloraConsumerBringPredictionOnChainExampleInterface
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "callProtocolFunctionWithAlloraConsumerPredictionValue",
+    functionFragment: "callProtocolFunctionWithAlloraTopicInference",
     values: [BigNumberish, AlloraConsumerNetworkInferenceDataStruct]
   ): string;
   encodeFunctionData(
@@ -126,7 +126,7 @@ export interface AlloraConsumerBringPredictionOnChainExampleInterface
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "callProtocolFunctionWithAlloraConsumerPredictionValue",
+    functionFragment: "callProtocolFunctionWithAlloraTopicInference",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -228,7 +228,7 @@ export interface AlloraConsumerBringPredictionOnChainExample
 
   alloraConsumer: TypedContractMethod<[], [string], "view">;
 
-  callProtocolFunctionWithAlloraConsumerPredictionValue: TypedContractMethod<
+  callProtocolFunctionWithAlloraTopicInference: TypedContractMethod<
     [
       protocolFunctionArgument: BigNumberish,
       alloraNetworkInferenceData: AlloraConsumerNetworkInferenceDataStruct
@@ -272,7 +272,7 @@ export interface AlloraConsumerBringPredictionOnChainExample
     nameOrSignature: "alloraConsumer"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "callProtocolFunctionWithAlloraConsumerPredictionValue"
+    nameOrSignature: "callProtocolFunctionWithAlloraTopicInference"
   ): TypedContractMethod<
     [
       protocolFunctionArgument: BigNumberish,
