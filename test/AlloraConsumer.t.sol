@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
-import { AlloraConsumer } from "../src/AlloraConsumer.sol";
+import { AlloraConsumer, AlloraConsumerConstructorArgs } from "../src/AlloraConsumer.sol";
 import { 
     NetworkInferenceData, 
     AlloraConsumerNetworkInferenceData
@@ -37,7 +37,7 @@ contract AlloraConsumerTest is Test {
     function setUp() public {
         vm.warp(2 hours);
 
-        alloraConsumer = new AlloraConsumer(admin);
+        alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({ owner: admin }));
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
