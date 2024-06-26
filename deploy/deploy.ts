@@ -2,14 +2,9 @@
 import Deployer from './Deployer'
 import { ethers } from 'ethers'
 
-// import { EvenFeeHandler__factory } from '../types/factories/EvenFeeHandler__factory'
-// import { MedianAggregator__factory } from '../types/factories/MedianAggregator__factory'
-// import { AlloraConsumer__factory } from '../types/factories/AlloraConsumer__factory'
-
 const contractInfoMap = {
   'AlloraConsumer': {
     path: 'src/AlloraConsumer.sol',
-    // factory: new AlloraConsumer__factory()
   },
 }
 
