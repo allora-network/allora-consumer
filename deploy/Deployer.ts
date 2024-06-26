@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 import fs from 'fs'
-import { ContractTransaction, Wallet, ContractFactory, JsonRpcProvider } from 'ethers'
+import { ContractTransaction, Wallet, JsonRpcProvider, ethers } from 'ethers'
 import { execSync, exec } from 'child_process'
 import * as dotenv from 'dotenv';
 import axios from 'axios'
@@ -13,7 +13,6 @@ type PromiseType<T> = T extends Promise<infer U> ? U : T;
 type contractInfoMap = { 
   [contractName: string]: { 
     path: string 
-    factory: ContractFactory
     libraries?: string[]
   }
 }
@@ -32,7 +31,7 @@ class Deployer <contractInfo extends contractInfoMap>{
   rpcUrl: string
   privateKey: string
   wallet: Wallet
-  contractInfoMap: contractInfo
+  contractInfoMap!: contractInfo
   etherscanApiKey: string
   chainId: number
 
@@ -41,6 +40,8 @@ class Deployer <contractInfo extends contractInfoMap>{
   constructor(contractInfoMap: contractInfo) {
     dotenv.config()
 
+    this.contractInfoMap = contractInfoMap
+
     this.deploymentRecordPath = `${__dirname}/deployments/${Deployer.getEnvVariable('deploymentName')}.json`
     this.rpcUrl = Deployer.getEnvVariable('rpcUrl')
     this.privateKey = Deployer.getEnvVariable('privateKey')
@@ -48,10 +49,6 @@ class Deployer <contractInfo extends contractInfoMap>{
     this.chainId = parseInt(Deployer.getEnvVariable('chainId'))
 
     this.wallet = new Wallet(this.privateKey, new JsonRpcProvider(this.rpcUrl))
-    this.contractInfoMap = 
-      Object.fromEntries(
-        Object.entries(contractInfoMap).map(
-          ([contractName, contractInfo]) => [contractName, {...contractInfo, factory: contractInfo.factory.connect(this.wallet)}])) as contractInfo
 
     if (fs.existsSync(this.deploymentRecordPath)) {
       this.deploymentRecord = JSON.parse(fs.readFileSync(this.deploymentRecordPath, 'utf8')) as deploymentRecord
@@ -82,22 +79,19 @@ class Deployer <contractInfo extends contractInfoMap>{
     this.initializeData()
   }
 
-  public deploy = async<
-    contractName extends keyof contractInfo, 
-    argsType extends Parameters<contractInfo[contractName]["factory"]["deploy"]>,
-    returnType extends PromiseType<ReturnType<contractInfo[contractName]["factory"]["deploy"]>>
-  >(
+  public deploy = async<contractName extends keyof contractInfo>(
     contractName: contractName,
-    args: argsType,
-  ): Promise<returnType> => {
-
+    args: string[],
+    constructorInterface: string
+  ): Promise<string> => {
     const contractId = `${this.contractInfoMap[contractName].path}:${String(contractName)}`
     const existingContractAddress = this.getDeployedContractAddress(String(contractName))
 
     const verify = async (contractAddress: string) => {
       console.info(`⏳ verifying ${String(contractName)}...`)
-      const encodedArgs = this.contractInfoMap[contractName].factory.interface.encodeDeploy(args)
-      await this.verifyContractUntilSuccess(contractAddress, contractId, this.etherscanApiKey, encodedArgs)
+      // const encodedArgs = this.contractInfoMap[contractName].factory.interface.encodeDeploy(args)
+      // await this.verifyContractUntilSuccess(contractAddress, contractId, this.etherscanApiKey, encodedArgs)
+      await this.verifyContractUntilSuccess(contractAddress, contractId, this.etherscanApiKey, args, constructorInterface)
       console.info(`✅ VERIFIED ${contractId.split(':')[1]}`)
     }
 
@@ -112,20 +106,24 @@ class Deployer <contractInfo extends contractInfoMap>{
         await verify(contractAddress)
       }
 
-      return this.contractInfoMap[contractName].factory.attach(contractAddress) as returnType
+      // return this.contractInfoMap[contractName].factory.attach(contractAddress) as returnType
+      return contractAddress
     }
 
     console.info(`⏳ deploying ${String(contractName)}...`)
-    const contractInstance = await this.contractInfoMap[contractName].factory.deploy(...args)
-    
-    contractAddress = await contractInstance.getAddress()
+
+    // const contractInstance = await this.contractInfoMap[contractName].factory.deploy(...args)
+    // contractAddress = await contractInstance.getAddress()
+    contractAddress = await this.deployContract(contractId, args)
+    console.log({contractAddress})
 
     this.setDeployedContractAddress(String(contractName), contractAddress)
     console.info(`✅ DEPLOYED ${String(contractName)} to: ${contractAddress}`)
 
     await verify(contractAddress)
 
-    return this.contractInfoMap[contractName].factory.attach(contractAddress) as returnType
+    return contractAddress
+    // return this.contractInfoMap[contractName].factory.attach(contractAddress) as returnType
   }
 
   private isContractVerified = async(contractAddress: string): Promise<boolean> => {
@@ -138,6 +136,8 @@ class Deployer <contractInfo extends contractInfoMap>{
       const response = await axios.get(
         `${apiUrl}?module=contract&action=getabi&address=${contractAddress}&apikey=${this.etherscanApiKey}`
       )
+
+      console.log({response: response.data})
       
       // If true, contract ABI is available, which means the contract is verified
       return response.data.status === '1' && response.data.message === 'OK'
@@ -147,18 +147,62 @@ class Deployer <contractInfo extends contractInfoMap>{
     }
   }
 
+  private deployContract = async(
+    contractId: string,
+    args: string[]
+  ): Promise<string> => {
+    return new Promise((resolve, _) => {
+      const command = [
+        `forge create`,
+        `--constructor-args ${args.join('  ')}`,
+        `--rpc-url ${this.rpcUrl}`,
+        `--private-key ${this.privateKey}`,
+        `${contractId}`
+      ]
+
+      const attemptDeploy = () => {
+        exec(command.join(' '), (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Retrying after verification error: ${error}`)
+            setTimeout(attemptDeploy, 1000) // Try again after 1 second
+            return
+          }
+
+          // Check if the output indicates success
+          const deployAddressMarker = 'Deployed to: '
+          if (stdout.includes(deployAddressMarker)) {
+            console.log({stdout})
+            const deployAddressMarkerEnd = stdout.indexOf(deployAddressMarker) + deployAddressMarker.length
+            return resolve(stdout.substring(deployAddressMarkerEnd, deployAddressMarkerEnd + 42))
+          } 
+
+          // stdout contains the output of the command
+          if (stderr) {
+            console.error(`stderr: ${stderr}`)
+          }
+
+          setTimeout(attemptDeploy, 1000) // Try again after 1 second
+        })
+      }
+      attemptDeploy()
+    })
+  }
+
   private verifyContractUntilSuccess = async(
     address: string,
     contractId: string,
     apiKey: string,
-    args: any
+    args: string[],
+    constructorInterface: string
   ) => {
+    const constructorArgs = await this.getConstructorArgs(args, constructorInterface)
+    console.log({constructorArgs})
     return new Promise((resolve, _) => {
       const command = [
         `forge verify-contract ${address} ${contractId}`,
         `--chain ${this.chainId}`,
         `--etherscan-api-key ${apiKey}`,
-        `--constructor-args ${args}`,
+        `--constructor-args ${constructorArgs})`
       ]
 
       const attemptVerification = () => {
@@ -185,6 +229,35 @@ class Deployer <contractInfo extends contractInfoMap>{
       }
       attemptVerification();
     });
+  }
+
+  private getConstructorArgs = (args: string[], argsInterface: string): Promise<string> => {
+    return new Promise((resolve, _) => {
+      const command: string[] = [
+        `cast abi-encode`,
+        `"${argsInterface}"`,
+        args.join(' ')
+      ]
+
+        exec(command.join(' '), (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Cast (${command.join(' ')}) failed: ${error}`)
+            return
+          }
+
+          // Check if the output indicates success
+          if (stdout.includes("OK") || stdout.includes("is already verified")) {
+            resolve('OK')
+            return
+          } 
+
+          // stdout contains the output of the command
+          if (stderr) {
+            console.error(`stderr: ${stderr}`)
+          }
+        })
+    });
+
   }
 
   public call = async (

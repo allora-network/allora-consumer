@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
-import { AlloraConsumer, AlloraConsumerConstructorArgs } from "../src/AlloraConsumer.sol";
+import { AlloraConsumer } from "../src/AlloraConsumer.sol";
 import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
 import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
@@ -37,7 +37,7 @@ contract AlloraConsumerAdmin is Test {
     function setUp() public {
         vm.warp(1 hours);
 
-        alloraConsumer = new AlloraConsumer(AlloraConsumerConstructorArgs({ owner: admin }));
+        alloraConsumer = new AlloraConsumer(admin);
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
