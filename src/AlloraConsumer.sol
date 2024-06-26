@@ -15,10 +15,6 @@ import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.so
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EIP712 } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol";
 
-struct AlloraConsumerConstructorArgs {
-    address owner;
-}
-
 
 contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
 
@@ -43,10 +39,10 @@ contract AlloraConsumer is IAlloraConsumer, Ownable2Step, EIP712 {
     uint48 public futureDataValiditySeconds = 5 minutes;
 
     /// @dev The constructor
-    constructor(AlloraConsumerConstructorArgs memory args) 
+    constructor(address owner) 
         EIP712("AlloraConsumer", "1") 
     {
-        _transferOwnership(args.owner);
+        _transferOwnership(owner);
     }
 
     // ***************************************************************
