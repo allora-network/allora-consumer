@@ -21,7 +21,6 @@ const deploy = async () => {
   const constructorInterface = "constructor(string)"
 
   const AlloraConsumer = await deployer.deploy('AlloraConsumer', [ADMIN], constructorInterface )
-  console.log({AlloraConsumer})
 }
 
 

@@ -89,9 +89,13 @@ class Deployer <contractInfo extends contractInfoMap>{
 
     const verify = async (contractAddress: string) => {
       console.info(`⏳ verifying ${String(contractName)}...`)
-      // const encodedArgs = this.contractInfoMap[contractName].factory.interface.encodeDeploy(args)
-      // await this.verifyContractUntilSuccess(contractAddress, contractId, this.etherscanApiKey, encodedArgs)
-      await this.verifyContractUntilSuccess(contractAddress, contractId, this.etherscanApiKey, args, constructorInterface)
+      await this.verifyContractUntilSuccess(
+        contractAddress, 
+        contractId, 
+        this.etherscanApiKey, 
+        args, 
+        constructorInterface
+      )
       console.info(`✅ VERIFIED ${contractId.split(':')[1]}`)
     }
 
@@ -106,16 +110,12 @@ class Deployer <contractInfo extends contractInfoMap>{
         await verify(contractAddress)
       }
 
-      // return this.contractInfoMap[contractName].factory.attach(contractAddress) as returnType
       return contractAddress
     }
 
     console.info(`⏳ deploying ${String(contractName)}...`)
 
-    // const contractInstance = await this.contractInfoMap[contractName].factory.deploy(...args)
-    // contractAddress = await contractInstance.getAddress()
     contractAddress = await this.deployContract(contractId, args)
-    console.log({contractAddress})
 
     this.setDeployedContractAddress(String(contractName), contractAddress)
     console.info(`✅ DEPLOYED ${String(contractName)} to: ${contractAddress}`)
@@ -123,7 +123,6 @@ class Deployer <contractInfo extends contractInfoMap>{
     await verify(contractAddress)
 
     return contractAddress
-    // return this.contractInfoMap[contractName].factory.attach(contractAddress) as returnType
   }
 
   private isContractVerified = async(contractAddress: string): Promise<boolean> => {
@@ -137,8 +136,6 @@ class Deployer <contractInfo extends contractInfoMap>{
         `${apiUrl}?module=contract&action=getabi&address=${contractAddress}&apikey=${this.etherscanApiKey}`
       )
 
-      console.log({response: response.data})
-      
       // If true, contract ABI is available, which means the contract is verified
       return response.data.status === '1' && response.data.message === 'OK'
     } catch (error) {
@@ -157,6 +154,7 @@ class Deployer <contractInfo extends contractInfoMap>{
         `--constructor-args ${args.join('  ')}`,
         `--rpc-url ${this.rpcUrl}`,
         `--private-key ${this.privateKey}`,
+        `--etherscan-api-key ${this.etherscanApiKey}`,
         `${contractId}`
       ]
 
@@ -171,7 +169,6 @@ class Deployer <contractInfo extends contractInfoMap>{
           // Check if the output indicates success
           const deployAddressMarker = 'Deployed to: '
           if (stdout.includes(deployAddressMarker)) {
-            console.log({stdout})
             const deployAddressMarkerEnd = stdout.indexOf(deployAddressMarker) + deployAddressMarker.length
             return resolve(stdout.substring(deployAddressMarkerEnd, deployAddressMarkerEnd + 42))
           } 
@@ -194,15 +191,15 @@ class Deployer <contractInfo extends contractInfoMap>{
     apiKey: string,
     args: string[],
     constructorInterface: string
-  ) => {
+  ): Promise<string> => {
     const constructorArgs = await this.getConstructorArgs(args, constructorInterface)
-    console.log({constructorArgs})
+
     return new Promise((resolve, _) => {
       const command = [
         `forge verify-contract ${address} ${contractId}`,
         `--chain ${this.chainId}`,
         `--etherscan-api-key ${apiKey}`,
-        `--constructor-args ${constructorArgs})`
+        `--constructor-args ${constructorArgs}`
       ]
 
       const attemptVerification = () => {
@@ -231,33 +228,14 @@ class Deployer <contractInfo extends contractInfoMap>{
     });
   }
 
-  private getConstructorArgs = (args: string[], argsInterface: string): Promise<string> => {
-    return new Promise((resolve, _) => {
-      const command: string[] = [
+  private getConstructorArgs = (args: string[], argsInterface: string): string => {
+      const commandParts: string[] = [
         `cast abi-encode`,
         `"${argsInterface}"`,
         args.join(' ')
       ]
 
-        exec(command.join(' '), (error, stdout, stderr) => {
-          if (error) {
-            console.error(`Cast (${command.join(' ')}) failed: ${error}`)
-            return
-          }
-
-          // Check if the output indicates success
-          if (stdout.includes("OK") || stdout.includes("is already verified")) {
-            resolve('OK')
-            return
-          } 
-
-          // stdout contains the output of the command
-          if (stderr) {
-            console.error(`stderr: ${stderr}`)
-          }
-        })
-    });
-
+      return execSync(commandParts.join(' '), { encoding: 'utf-8' });
   }
 
   public call = async (
