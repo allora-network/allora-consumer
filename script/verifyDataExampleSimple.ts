@@ -24,10 +24,10 @@ const run = async () => {
       .connect(senderWallet) as AlloraConsumer
 
   const tx = await alloraConsumer.verifyNetworkInference({
-    signature: '0x6a53bbb80598dc2b580263221db161c7ea2e90d93047f727870a062553314859149c1281aa1c7070b3ef9ff28f335a175e972f45374e6c729f57414ff2dbe43b1b',
+    signature: '0x99b8b75f875a9ecc09fc499073656407458d464edeceb384686dba990ed785d841e6510b578d253a6e19a20503d1ec1e3c38b4c60980ff3b4df9ce3335ebd3851b',
       networkInference: {
       topicId: 9,
-      timestamp: 1719866147,
+      timestamp: 1719866777,
       extraData: ethers.toUtf8Bytes(''),
       networkInference: '3365485208027959000000',
       confidenceIntervalPercentiles:[
