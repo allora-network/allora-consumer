@@ -17,9 +17,7 @@ const deploy = async () => {
 
   console.log("deploying")
 
-  const AlloraConsumer = await deployer.deploy(
-    'AlloraConsumer', [{ owner: ADMIN }]
-  )
+  await deployer.deploy('AlloraConsumer', [{ owner: ADMIN }])
 }
 
 deploy()

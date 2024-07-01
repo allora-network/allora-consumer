@@ -9,7 +9,7 @@ import * as dotenv from 'dotenv';
 
 const ALLORA_CONSUMER_NAME = 'AlloraConsumer'
 const ALLORA_CONSUMER_VERSION = 1
-const ALLORA_CONSUMER_ADDRESS = '0x08f305A3449F51BFd79D7582A1630304664B1474'
+const ALLORA_CONSUMER_ADDRESS = '0x8E45fbef38DaC54e32AfB27AC8cBab30E6818ce6'
 const ALLORA_CONSUMER_CHAIN_ID = 11155111
 
 type NetworkInferenceDataStruct = {
@@ -103,7 +103,6 @@ const signMessageLocally = async (
 const run = async () => {
   dotenv.config()
 
-
   const signerPrivateKey = getEnvVariable('backendSignerPrivateKey')
   const senderPrivateKey = getEnvVariable('privateKey')
 
@@ -116,15 +115,33 @@ const run = async () => {
   console.log({privateKey: signerPrivateKey})
   console.log({walletAddress: signerWallet.address})
 
-  const alloraConsumer = (new AlloraConsumer__factory()).attach(ALLORA_CONSUMER_ADDRESS).connect(senderWallet) as AlloraConsumer
+  const alloraConsumer = 
+    (new AlloraConsumer__factory())
+      .attach(ALLORA_CONSUMER_ADDRESS)
+      .connect(senderWallet) as AlloraConsumer
+
+
+  const remoteSignature = "0x60ead29bdce185d33a7910b7bff327116070a03d3147c431d1d6d18397cfc6c805f55de4df1f8c82d43da658757c0edf6963ae8a0b43d77ccf4dcda9d4a788201c"
 
   const networkInferenceData: NetworkInferenceDataStruct = {
     topicId: 1,
-    timestamp: Math.floor(Date.now() / 1000) - 5 * 60, // 5 minutes ago
+    timestamp:1719431767,
     extraData: ethers.toUtf8Bytes(''),
-    networkInference: '123000000000000000000',
-    confidenceIntervalPercentiles: ['456000000000000000000'],
-    confidenceIntervalValues: ['789000000000000000000'],
+    networkInference: '3051194321638402445200',
+    confidenceIntervalPercentiles:[
+      '2280000000000000000',
+      '15870000000000000000',
+      '50000000000000000000',
+      '84130000000000000000',
+      '97720000000000000000'
+    ],
+    confidenceIntervalValues:[
+      '3016256807053656000000',
+      '3029849059956295000000',
+      '3049738780726754000000',
+      '3148682039955208400000',
+      '3278333171848616500000'
+    ],
   }
 
   console.info('verifying networkInferenceData')
@@ -142,9 +159,13 @@ const run = async () => {
     signerPrivateKey: signerPrivateKey 
   })
 
-  console.log({signature, localSignature})
+  console.log({signature, localSignature, remoteSignature})
 
   if (signature !== localSignature) {
+    throw new Error('local signature does not match. Check chainId.')
+  }
+
+  if (signature !== remoteSignature) {
     throw new Error('local signature does not match remote. Check chainId.')
   }
 

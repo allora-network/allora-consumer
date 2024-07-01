@@ -34,7 +34,7 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
         uint256 protocolFunctionArgument,
         uint256 topicId
     ) external payable {
-        TopicValue memory topicValue = IAlloraConsumer(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).getTopicValue(topicId, '');
+        TopicValue memory topicValue = alloraConsumer.getTopicValue(topicId, '');
 
         if (topicValue.recentValueTime + 1 hours < block.timestamp) {
             revert('AlloraConsumerBringPredictionOnChainExample: stale value');
@@ -62,7 +62,7 @@ contract AlloraConsumerBringPredictionOnChainExample is Ownable2Step {
             uint256 value,
             uint256[] memory confidenceIntervalPercentiles,
             uint256[] memory confidenceIntervalValues,
-        ) = IAlloraConsumer(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyNetworkInference(alloraNetworkInferenceData);
+        ) = alloraConsumer.verifyNetworkInference(alloraNetworkInferenceData);
 
         _protocolFunctionRequiringPredictionValue(
             protocolFunctionArgument, 
