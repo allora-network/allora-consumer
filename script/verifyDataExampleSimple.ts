@@ -13,14 +13,10 @@ const run = async () => {
   dotenv.config()
 
   const senderPrivateKey = getEnvVariable('privateKey')
-  const signerPrivateKey = getEnvVariable('backendSignerPrivateKey')
   const rpcUrl = getEnvVariable('rpcUrl')
 
   const provider = new ethers.JsonRpcProvider(rpcUrl)
-
   const senderWallet = new ethers.Wallet(senderPrivateKey, provider)
-  const signerWallet = new ethers.Wallet(senderPrivateKey, provider)
-  console.log({backendSigner: signerWallet.address})
 
   const alloraConsumer = 
     (new AlloraConsumer__factory())
@@ -28,14 +24,26 @@ const run = async () => {
       .connect(senderWallet) as AlloraConsumer
 
   const tx = await alloraConsumer.verifyNetworkInference({
-    signature: '0xa0ca0e46c70be68d4e2967d495e9f48f80c711132cd706749bfc8980c801b8975878f49cede91e33a0e4ae4cb2aa6e5d624963404f13739da371934c63263f701c',
+    signature: '0x6a53bbb80598dc2b580263221db161c7ea2e90d93047f727870a062553314859149c1281aa1c7070b3ef9ff28f335a175e972f45374e6c729f57414ff2dbe43b1b',
       networkInference: {
-      topicId: 1,
-      timestamp: 1719864404,
+      topicId: 9,
+      timestamp: 1719866147,
       extraData: ethers.toUtf8Bytes(''),
       networkInference: '3365485208027959000000',
-      confidenceIntervalPercentiles:[],
-      confidenceIntervalValues:[],
+      confidenceIntervalPercentiles:[
+        '2280000000000000000',
+        '15870000000000000000',
+        '50000000000000000000',
+        '84130000000000000000',
+        '97720000000000000000'
+      ],
+      confidenceIntervalValues:[
+        '3016256807053656000000',
+        '3029849059956295000000',
+        '3049738780726754000000',
+        '3148682039955208400000',
+        '3278333171848616500000'
+      ],
     }, 
     extraData: ethers.toUtf8Bytes(''),
   })
